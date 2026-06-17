@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ============================================================ -->
+    <!-- PRIMARY META — update description if church tagline changes  -->
+    <!-- ============================================================ -->
+    <title>Lighthouse Chapel – Beloved Son Cathedral | Amasaman, Accra, Ghana</title>
+    <meta name="description"
+        content="Welcome to Lighthouse Chapel – Beloved Son Cathedral in Amasaman, Accra, Ghana. A Spirit-filled, Word-driven community. Join us for worship every Sunday." />
+    <meta name="keywords"
+        content="Lighthouse Chapel, Beloved Son Cathedral, church Amasaman, church Accra Ghana, Christian church Ghana" />
+    <meta name="author" content="Lighthouse Chapel" />
+    <meta name="theme-color" content="#0d2b52" />
+
+    <!-- ============================================================ -->
+    <!-- FAVICON                                                       -->
+    <!-- Place favicon.svg in your frontend/ root folder              -->
+    <!-- ============================================================ -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+    <!-- ============================================================ -->
+    <!-- PWA MANIFEST                                                  -->
+    <!-- Place manifest.json in your frontend/ root folder            -->
+    <!-- ============================================================ -->
+    <link rel="manifest" href="manifest.json" />
+
+    <!-- ============================================================ -->
+    <!-- OPEN GRAPH — controls WhatsApp / Facebook / Twitter preview  -->
+    <!-- ⚠️ DOMAIN: Replace URL with real domain when deployed        -->
+    <!-- ⚠️ IMAGE: Replace og-image.jpg with a real church photo      -->
+    <!--   Ideal size: 1200×630px, save as frontend/og-image.jpg      -->
+    <!-- ============================================================ -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Lighthouse Chapel" />
+    <meta property="og:title" content="Lighthouse Chapel – Beloved Son Cathedral" />
+    <meta property="og:description"
+        content="A Place of Light, Love & Transformation. Located in Amasaman, Accra, Ghana. Join us every Sunday." />
+    <meta property="og:url" content="https://lighthousechapel.org/" />
+    <meta property="og:image" content="https://lighthousechapel.org/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_GH" />
+
+    <!-- Twitter/X card (works even without a Twitter account) -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Lighthouse Chapel – Beloved Son Cathedral" />
+    <meta name="twitter:description" content="A Place of Light, Love & Transformation. Amasaman, Accra, Ghana." />
+    <meta name="twitter:image" content="https://lighthousechapel.org/og-image.jpg" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
+        rel="stylesheet" />
+
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+    <!-- ===== NAVIGATION ===== -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="brand-icon">✦</div>
+                <div class="brand-text">
+                    <span class="brand-main">LIGHTHOUSE CHAPEL</span>
+                    <span class="brand-sub">Beloved Son Cathedral</span>
+                </div>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#announcements">News</a></li>
+                <li><a href="#events">Events</a></li>
+                <li><a href="#ministries">Ministries</a></li>
+                <li><a href="#sermons">Sermons</a></li>
+                <li><a href="#gallery">Gallery</a></li>
+                <li><a href="#bible">Bible</a></li>
+                <li><a href="#location">Find Us</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="give.html" class="nav-give-btn">💛 Give</a></li>
+                <li><a href="admin/login.html" class="nav-admin-btn">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ===== HERO ===== -->
+    <section id="home" class="hero">
+        <div class="hero-bg" id="heroBg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-eyebrow">Welcome to</div>
+            <h1 class="hero-title">
+                <span class="hero-title-main">LIGHTHOUSE</span>
+                <span class="hero-title-sub">CHAPEL</span>
+            </h1>
+            <p class="hero-church-full">Beloved Son Cathedral</p>
+            <p class="hero-location">📍 Amasaman, Accra, Ghana</p>
+            <p class="hero-tagline" id="heroTagline">A Place of Light, Love &amp; Transformation</p>
+            <div class="hero-cta-group">
+                <a href="#services" class="btn-primary">Our Service Times</a>
+                <a href="#location" class="btn-outline">Find Us</a>
+            </div>
+            <div class="hero-scroll-indicator">
+                <div class="scroll-line"></div>
+                <span>Scroll to explore</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WELCOME STRIP ===== -->
+    <section class="welcome-strip">
+        <div class="container">
+            <p class="welcome-verse">"You are the light of the world. A city set on a hill cannot be hidden." — Matthew
+                5:14</p>
+        </div>
+    </section>
+
+    <!-- ===== YEAR MOTTO ===== -->
+    <section id="motto" class="motto-section" style="display:none">
+        <div class="motto-inner">
+            <div class="motto-frame">
+                <div class="motto-corner motto-corner--tl"></div>
+                <div class="motto-corner motto-corner--tr"></div>
+                <div class="motto-corner motto-corner--bl"></div>
+                <div class="motto-corner motto-corner--br"></div>
+                <img id="mottoImage" src="" alt="Year Motto" class="motto-img" />
+            </div>
+            <div class="motto-scripture" id="mottoScripture" style="display:none"></div>
+        </div>
+    </section>
+
+    <!-- ===== ABOUT ===== -->
+    <section id="about" class="section about-section">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-text">
+                    <div class="section-eyebrow">Our Story</div>
+                    <h2 class="section-title">Who We Are</h2>
+                    <p class="about-body" id="aboutText">Loading...</p>
+                    <div class="about-pillars">
+                        <div class="pillar">
+                            <div class="pillar-icon">🙏</div>
+                            <h4>Vision</h4>
+                            <p id="visionText">Loading...</p>
+                        </div>
+                        <div class="pillar">
+                            <div class="pillar-icon">🌍</div>
+                            <h4>Mission</h4>
+                            <p id="missionText">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-pastors">
+                    <div class="section-eyebrow">Leadership</div>
+                    <h3>Our Pastors</h3>
+                    <div class="pastors-grid" id="pastorsGrid">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SERVICE TIMES ===== -->
+    <section id="services" class="section services-section">
+        <div class="services-bg"></div>
+        <div class="container">
+            <div class="section-eyebrow light">Gather With Us</div>
+            <h2 class="section-title light">Service Times</h2>
+            <p class="section-subtitle light">You are always welcome. Come as you are.</p>
+            <div class="services-grid" id="servicesGrid">
+                <div class="loading-spinner light"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="visit" class="visit-section" style="display:none">
+        <div class="visit-bg" id="visitBg"></div>
+        <div class="visit-overlay"></div>
+        <div class="visit-content">
+            <div class="visit-eyebrow">You Are Welcome Here</div>
+            <h2 class="visit-title">Plan Your Visit</h2>
+            <p class="visit-sub">Come as you are. Leave transformed. We'd love to meet you in person.</p>
+            <div class="visit-chips">
+                <div class="visit-chip">👋 Friendly &amp; Welcoming</div>
+                <div class="visit-chip">🎵 Spirit-filled Worship</div>
+                <div class="visit-chip">📖 Word-driven Teaching</div>
+                <div class="visit-chip">👨‍👩‍👧 Family Friendly</div>
+            </div>
+            <a href="#services" class="btn-primary" style="margin-top:8px">See Service Times</a>
+        </div>
+    </section>
+
+    <!-- ===== ANNOUNCEMENTS ===== -->
+    <section id="announcements" class="section announcements-section">
+        <div class="container">
+            <div class="section-eyebrow">Stay Informed</div>
+            <h2 class="section-title">Announcements</h2>
+            <p class="section-subtitle">The latest news and updates from your church family</p>
+            <div class="announcements-grid" id="announcementsGrid">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== EVENTS ===== -->
+    <section id="events" class="section events-section">
+        <div class="container">
+            <div class="section-eyebrow">Mark Your Calendar</div>
+            <h2 class="section-title">Upcoming Events</h2>
+            <div class="events-filter" id="eventsFilter">
+                <button class="filter-btn active" data-cat="">All</button>
+                <button class="filter-btn" data-cat="worship">Worship</button>
+                <button class="filter-btn" data-cat="youth">Youth</button>
+                <button class="filter-btn" data-cat="women">Women</button>
+                <button class="filter-btn" data-cat="men">Men</button>
+                <button class="filter-btn" data-cat="outreach">Outreach</button>
+            </div>
+            <div class="events-grid" id="eventsGrid">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== MINISTRIES ===== -->
+    <section id="ministries" class="section ministries-section">
+        <div class="ministries-bg"></div>
+        <div class="container">
+            <div class="section-eyebrow light">Get Connected</div>
+            <h2 class="section-title light">Ministries &amp; Groups</h2>
+            <p class="section-subtitle light">There is a place for everyone in our church family</p>
+            <div class="ministries-grid" id="ministriesGrid">
+                <div class="loading-spinner light"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SERMONS ===== -->
+    <section id="sermons" class="section sermons-section">
+        <div class="container">
+            <div class="section-eyebrow">The Word</div>
+            <h2 class="section-title">Sermon Archive</h2>
+            <p class="section-subtitle">Listen, watch and grow through Spirit-filled messages</p>
+            <div class="sermons-grid" id="sermonsGrid">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== GALLERY ===== -->
+    <section id="gallery" class="section gallery-section">
+        <div class="container">
+            <div class="section-eyebrow" style="text-align:center">Our Moments</div>
+            <h2 class="section-title" style="text-align:center">Gallery</h2>
+            <p class="section-subtitle" style="text-align:center;margin:0 auto 48px">Glimpses of God's work among us</p>
+
+            <!-- SLIDESHOW HERO -->
+            <div class="gal-slideshow" id="galSlideshow">
+                <div class="gal-slides" id="galSlides"></div>
+                <div class="gal-slide-overlay"></div>
+                <button class="gal-slide-arrow gal-prev" onclick="galSlide(-1)">&#8249;</button>
+                <button class="gal-slide-arrow gal-next" onclick="galSlide(1)">&#8250;</button>
+                <div class="gal-slide-dots" id="galDots"></div>
+                <div class="gal-slide-caption" id="galSlideCaption"></div>
+            </div>
+
+            <!-- ALBUM TABS -->
+            <div class="gal-tabs" id="galTabs"></div>
+
+            <!-- PREVIEW GRID -->
+            <div class="gal-preview-grid" id="galPreviewGrid"></div>
+
+            <!-- VIEW ALL BUTTON -->
+            <div style="text-align:center;margin-top:36px">
+                <button class="gal-view-all-btn" id="galViewAllBtn" onclick="openGalleryModal()">
+                    View All Photos <span id="galViewAllCount"></span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- GALLERY MODAL -->
+    <div id="galleryModal" class="gal-modal-overlay">
+        <div class="gal-modal-box">
+            <div class="gal-modal-header">
+                <span class="gal-modal-title" id="galModalTitle">All Photos</span>
+                <button class="gal-modal-close" onclick="closeGalleryModal()">&times;</button>
+            </div>
+            <div class="gal-modal-grid" id="galModalGrid"></div>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" id="lightboxClose">&times;</button>
+        <button class="lightbox-prev" id="lightboxPrev">&#8249;</button>
+        <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+        <button class="lightbox-next" id="lightboxNext">&#8250;</button>
+        <p class="lightbox-caption" id="lightboxCaption"></p>
+    </div>
+
+
+    <section id="churchLife" class="church-life-section" style="display:none">
+        <div class="container">
+            <div class="section-eyebrow" style="text-align:center">Our Community</div>
+            <h2 class="section-title" style="text-align:center;margin-bottom:8px">Life at Lighthouse</h2>
+            <p class="section-subtitle" style="text-align:center;margin:0 auto 48px">A glimpse into our church family
+            </p>
+            <div class="church-life-grid" id="churchLifeGrid">
+                <!-- populated by JS -->
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ===== BIBLE READER ===== -->
+    <section id="bible" class="section bible-section">
+        <div class="container">
+            <div class="section-eyebrow">The Living Word</div>
+            <h2 class="section-title">Read the Bible</h2>
+            <p class="section-subtitle">God's Word — available anytime, anywhere</p>
+            <div class="bible-reader">
+                <div class="bible-controls">
+                    <select id="bibleBook" class="bible-select">
+                        <option value="">Select Book</option>
+                    </select>
+                    <select id="bibleChapter" class="bible-select" disabled>
+                        <option value="">Chapter</option>
+                    </select>
+                    <button id="bibleReadBtn" class="btn-primary" disabled>Read</button>
+                </div>
+                <div class="bible-search-row">
+                    <input type="text" id="bibleSearch" placeholder="Search a verse (e.g. John 3:16)..."
+                        class="bible-search-input" />
+                    <button id="bibleSearchBtn" class="btn-outline-sm">Search</button>
+                </div>
+                <div class="bible-content" id="bibleContent">
+                    <div class="bible-welcome">
+                        <div class="bible-cross">✞</div>
+                        <p>"Thy word is a lamp unto my feet, and a light unto my path." — Psalm 119:105</p>
+                        <p class="bible-instruction">Select a book and chapter above to begin reading.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PRAYER REQUEST ===== -->
+    <section id="prayer" class="section prayer-section">
+        <div class="prayer-bg"></div>
+        <div class="container">
+            <div class="section-eyebrow light">We Pray With You</div>
+            <h2 class="section-title light">Submit a Prayer Request</h2>
+            <p class="section-subtitle light">Our prayer team will intercede on your behalf. You are not alone.</p>
+            <div class="prayer-form-wrapper">
+                <form id="prayerForm" class="prayer-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Your Name *</label>
+                            <input type="text" id="prayerName" placeholder="Enter your name" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Email (optional)</label>
+                            <input type="email" id="prayerEmail" placeholder="your@email.com" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Your Prayer Request *</label>
+                        <textarea id="prayerRequest" rows="5" placeholder="Share what's on your heart..."
+                            required></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="prayerPrivate" checked />
+                        <label for="prayerPrivate">Keep this request private (only visible to church leadership)</label>
+                    </div>
+                    <button type="submit" class="btn-primary btn-full" id="prayerSubmitBtn">Send My Prayer Request
+                        🙏</button>
+                    <div id="prayerMessage" class="form-message"></div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== LOCATION ===== -->
+    <section id="location" class="section location-section">
+        <div class="container">
+            <div class="section-eyebrow">Find Your Way</div>
+            <h2 class="section-title">Where We Are</h2>
+            <div class="location-grid">
+                <div class="location-info">
+                    <div class="location-detail-item">
+                        <div class="loc-icon">📍</div>
+                        <div>
+                            <h4>Physical Address</h4>
+                            <p id="churchAddress">Amasaman, Accra, Ghana</p>
+                        </div>
+                    </div>
+                    <div class="location-detail-item">
+                        <div class="loc-icon">📞</div>
+                        <div>
+                            <h4>Phone</h4>
+                            <p id="churchPhone">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="location-detail-item">
+                        <div class="loc-icon">✉️</div>
+                        <div>
+                            <h4>Email</h4>
+                            <p id="churchEmail">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="social-links" id="socialLinks"></div>
+                    <div class="location-next-service">
+                        <h4>🕊 Next Service</h4>
+                        <p id="nextServiceInfo">See service times above</p>
+                    </div>
+                </div>
+                <div class="location-map">
+                    <iframe id="mapEmbed"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15878.4!2d-0.3100!3d5.7100!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNcKwNDInMzYuMCJOIDDCsDE4JzM2LjAiVw!5e0!3m2!1sen!2sgh!4v1234567890"
+                        width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        title="Lighthouse Chapel Location - Amasaman, Accra, Ghana">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CONTACT ===== -->
+    <section id="contact" class="section contact-section">
+        <div class="container">
+            <div class="section-eyebrow">Reach Out</div>
+            <h2 class="section-title">Contact Us</h2>
+            <p class="section-subtitle">We would love to hear from you. Send us a message and we'll respond as soon as
+                possible.</p>
+            <form id="contactForm" class="contact-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="contactName" placeholder="Your full name" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="contactEmail" placeholder="your@email.com" required />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone (optional)</label>
+                        <input type="tel" id="contactPhone" placeholder="+233 XX XXX XXXX" />
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <input type="text" id="contactSubject" placeholder="What is this about?" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Message *</label>
+                    <textarea id="contactMessage" rows="6" placeholder="Type your message here..." required></textarea>
+                </div>
+                <button type="submit" class="btn-primary btn-full" id="contactSubmitBtn">Send Message ✉️</button>
+                <div class="form-message"></div>
+            </form>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="footer-cross">✦</div>
+                <h3>LIGHTHOUSE CHAPEL</h3>
+                <p>Beloved Son Cathedral</p>
+                <p class="footer-address">Amasaman, Accra, Ghana</p>
+            </div>
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#services">Service Times</a></li>
+                    <li><a href="#sermons">Sermons</a></li>
+                    <li><a href="#events">Events</a></li>
+                    <li><a href="#ministries">Ministries</a></li>
+                    <li><a href="#bible">Read the Bible</a></li>
+                </ul>
+            </div>
+            <div class="footer-connect">
+                <h4>Connect</h4>
+                <ul>
+                    <li><a href="#prayer">Prayer Requests</a></li>
+                    <li><a href="#contact">Contact Us</a></li>
+                    <li><a href="give.html">Give / Support</a></li>
+                    <li><a href="#location">Find Us</a></li>
+                    <li><a href="admin/login.html">Admin Login</a></li>
+                </ul>
+                <div class="footer-social" id="footerSocial"></div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; <span id="footerYear"></span> Lighthouse Chapel – Beloved Son Cathedral. Amasaman, Accra,
+                Ghana. All rights reserved.</p>
+            <p class="footer-verse">"The Lord bless you and keep you." — Numbers 6:24</p>
+        </div>
+    </footer>
+
+    <div id="pastorModal" class="pastor-modal-overlay" onclick="closePastorModal(event)">
+        <div class="pastor-modal-box">
+            <button class="pastor-modal-close" onclick="closePastorModal()">&times;</button>
+            <div class="pastor-modal-inner">
+                <div class="pastor-modal-left">
+                    <div class="pastor-modal-img-wrap" id="pastorModalImgWrap">
+                        <img id="pastorModalImg" src="" alt="" />
+                    </div>
+                    <div class="pastor-modal-badge" id="pastorModalTitle"></div>
+                    <div class="pastor-modal-contacts" id="pastorModalContacts"></div>
+                </div>
+                <div class="pastor-modal-right">
+                    <h2 class="pastor-modal-name" id="pastorModalName"></h2>
+                    <div class="pastor-modal-divider"></div>
+                    <p class="pastor-modal-bio" id="pastorModalBio"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== LIGHTBOX ===== -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" id="lightboxClose">&times;</button>
+        <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+        <p class="lightbox-caption" id="lightboxCaption"></p>
+    </div>
+
+    <!-- ===== SCROLL TO TOP ===== -->
+    <button class="scroll-top" id="scrollTop" aria-label="Scroll to top">↑</button>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/bible.js"></script>
+</body>
+
+</html>

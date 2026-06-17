@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard – Lighthouse Church</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="dashboard.css" />
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-icon">✦</div>
+            <div>
+                <div class="sidebar-title">LIGHTHOUSE</div>
+                <div class="sidebar-sub">Admin Portal</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-panel="home">🏠 Dashboard Home</a>
+
+            <div class="nav-section-label">Content</div>
+            <a href="#" class="nav-item" data-panel="announcements">📢 Announcements</a>
+            <a href="#" class="nav-item" data-panel="events">📅 Events</a>
+            <a href="#" class="nav-item" data-panel="sermons">🎙️ Sermons</a>
+            <a href="#" class="nav-item" data-panel="gallery">📸 Gallery</a>
+
+            <div class="nav-section-label">Church Info</div>
+            <a href="#" class="nav-item" data-panel="pastors">👤 Pastors</a>
+            <a href="#" class="nav-item" data-panel="ministries">⛪ Ministries</a>
+            <a href="#" class="nav-item" data-panel="servicetimes">🕐 Service Times</a>
+            <a href="#" class="nav-item" data-panel="settings">⚙️ Church Settings</a>
+
+            <div class="nav-section-label">Members</div>
+            <a href="#" class="nav-item" data-panel="members">👥 All Members</a>
+            <a href="#" class="nav-item" data-panel="groups">🏷️ Groups & Roles</a>
+
+            <div class="nav-section-label">Communication</div>
+            <a href="#" class="nav-item" data-panel="prayer">🙏 Prayer Requests</a>
+            <a href="#" class="nav-item" data-panel="messages">✉️ Messages</a>
+
+            <div class="nav-section-label">System</div>
+            <a href="#" class="nav-item" data-panel="admins">🔐 Admin Users</a>
+            <a href="../index.html" class="nav-item" target="_blank">🌐 View Website</a>
+        </nav>
+        <div class="sidebar-user">
+            <div class="user-avatar">👤</div>
+            <div class="user-info">
+                <div class="user-name" id="adminName">Loading...</div>
+                <div class="user-role" id="adminRole">admin</div>
+            </div>
+            <button class="logout-btn" onclick="logout()" title="Logout">⎋</button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="mainContent">
+        <div class="topbar">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <h1 class="topbar-title" id="panelTitle">Announcements</h1>
+            <div class="topbar-actions">
+                <span class="topbar-church">Lighthouse Church — The Quodesh Family Church</span>
+            </div>
+        </div>
+
+        <div class="toast" id="toast"></div>
+
+        <!-- HOME -->
+        <div class="panel active" id="panel-home">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Dashboard Home</h2>
+                    <p>Welcome back — here's what's happening at Lighthouse Chapel</p>
+                </div>
+                <span class="home-date" id="homeDate"></span>
+            </div>
+
+            <!-- QUICK STATS -->
+            <div class="home-stats-grid" id="homeStatsGrid">
+                <div class="home-stat-card" onclick="loadPanel('members')" style="cursor:pointer">
+                    <div class="home-stat-icon">👥</div>
+                    <div class="home-stat-num" id="statMembers">—</div>
+                    <div class="home-stat-label">Total Members</div>
+                </div>
+                <div class="home-stat-card" onclick="loadPanel('events')" style="cursor:pointer">
+                    <div class="home-stat-icon">📅</div>
+                    <div class="home-stat-num" id="statEvents">—</div>
+                    <div class="home-stat-label">Upcoming Events</div>
+                </div>
+                <div class="home-stat-card" onclick="loadPanel('prayer')" style="cursor:pointer">
+                    <div class="home-stat-icon">🙏</div>
+                    <div class="home-stat-num" id="statPrayer">—</div>
+                    <div class="home-stat-label">Pending Prayers</div>
+                </div>
+                <div class="home-stat-card" onclick="loadPanel('messages')" style="cursor:pointer">
+                    <div class="home-stat-icon">✉️</div>
+                    <div class="home-stat-num" id="statMessages">—</div>
+                    <div class="home-stat-label">Unread Messages</div>
+                </div>
+                <div class="home-stat-card" onclick="loadPanel('sermons')" style="cursor:pointer">
+                    <div class="home-stat-icon">🎙️</div>
+                    <div class="home-stat-num" id="statSermons">—</div>
+                    <div class="home-stat-label">Total Sermons</div>
+                </div>
+                <div class="home-stat-card" onclick="loadPanel('groups')" style="cursor:pointer">
+                    <div class="home-stat-icon">🏷️</div>
+                    <div class="home-stat-num" id="statGroups">—</div>
+                    <div class="home-stat-label">Active Groups</div>
+                </div>
+            </div>
+
+            <div class="home-grid">
+                <!-- BIRTHDAYS -->
+                <div class="home-card">
+                    <div class="home-card-header">
+                        <div class="home-card-title">🎂 Birthdays This Week</div>
+                        <button class="btn-edit btn-sm" onclick="loadPanel('members')">View All</button>
+                    </div>
+                    <div id="homeBirthdays"></div>
+                </div>
+
+                <!-- RECENT PRAYER REQUESTS -->
+                <div class="home-card">
+                    <div class="home-card-header">
+                        <div class="home-card-title">🙏 Recent Prayer Requests</div>
+                        <button class="btn-edit btn-sm" onclick="loadPanel('prayer')">View All</button>
+                    </div>
+                    <div id="homeRecentPrayer"></div>
+                </div>
+
+                <!-- UPCOMING EVENTS -->
+                <div class="home-card">
+                    <div class="home-card-header">
+                        <div class="home-card-title">📅 Upcoming Events</div>
+                        <button class="btn-edit btn-sm" onclick="loadPanel('events')">View All</button>
+                    </div>
+                    <div id="homeUpcomingEvents"></div>
+                </div>
+
+                <!-- RECENT MESSAGES -->
+                <div class="home-card">
+                    <div class="home-card-header">
+                        <div class="home-card-title">✉️ Recent Messages</div>
+                        <button class="btn-edit btn-sm" onclick="loadPanel('messages')">View All</button>
+                    </div>
+                    <div id="homeRecentMessages"></div>
+                </div>
+
+                <!-- MEMBER BREAKDOWN -->
+                <div class="home-card">
+                    <div class="home-card-header">
+                        <div class="home-card-title">👥 Member Breakdown</div>
+                    </div>
+                    <div id="homeMemberBreakdown"></div>
+                </div>
+
+                <!-- ANALYTICS -->
+                <div class="home-card">
+                    <div class="home-card-header">
+                        <div class="home-card-title">📊 Sermon Performance</div>
+                    </div>
+                    <div id="homeSermonStats"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANNOUNCEMENTS -->
+        <div class="panel" id="panel-announcements">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Announcements</h2>
+                    <p>Manage church news and updates</p>
+                </div>
+                <button class="btn-add" onclick="openModal('announcement')">+ New Announcement</button>
+            </div>
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Pinned</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="announcementsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- EVENTS -->
+        <div class="panel" id="panel-events">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Events</h2>
+                    <p>Create and manage church events</p>
+                </div>
+                <div class="panel-header-actions">
+                    <div class="events-tab-group">
+                        <button class="events-tab active" id="tabUpcoming"
+                            onclick="switchEventTab(false)">Upcoming</button>
+                        <button class="events-tab" id="tabArchived" onclick="switchEventTab(true)">Archived</button>
+                    </div>
+                    <button class="btn-add" onclick="openModal('event')">+ New Event</button>
+                </div>
+            </div>
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Form</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SERMONS -->
+        <div class="panel" id="panel-sermons">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Sermons</h2>
+                    <p>Upload and manage sermon archive</p>
+                </div>
+                <button class="btn-add" onclick="openModal('sermon')">+ Add Sermon</button>
+            </div>
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Pastor</th>
+                            <th>Date</th>
+                            <th>Series</th>
+                            <th>Views</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sermonsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- GALLERY -->
+        <div class="panel" id="panel-gallery">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Gallery</h2>
+                    <p>Manage church photos by album</p>
+                </div>
+                <button class="btn-add" onclick="openModal('gallery')">+ Add Photo</button>
+            </div>
+            <div class="gallery-admin-grid" id="galleryAdminGrid"></div>
+        </div>
+
+        <!-- PASTORS -->
+        <div class="panel" id="panel-pastors">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Pastors & Leadership</h2>
+                    <p>Manage the pastoral team</p>
+                </div>
+                <button class="btn-add" onclick="openModal('pastor')">+ Add Pastor</button>
+            </div>
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Title</th>
+                            <th>Email</th>
+                            <th>Order</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pastorsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- MINISTRIES -->
+        <div class="panel" id="panel-ministries">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Ministries & Groups</h2>
+                    <p>Manage church departments</p>
+                </div>
+                <button class="btn-add" onclick="openModal('ministry')">+ Add Ministry</button>
+            </div>
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Leader</th>
+                            <th>Schedule</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ministriesTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SERVICE TIMES -->
+        <div class="panel" id="panel-servicetimes">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Service Times</h2>
+                    <p>Update when services are held</p>
+                </div>
+                <button class="btn-add" onclick="openModal('servicetime')">+ Add Service</button>
+            </div>
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Service</th>
+                            <th>Time</th>
+                            <th>Location</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="servicetimesTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="panel" id="panel-settings">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Church Settings</h2>
+                    <p>Update church info, contact details, and social media</p>
+                </div>
+            </div>
+            <div class="settings-form" id="settingsForm"></div>
+        </div>
+
+        <!-- MEMBERS -->
+        <div class="panel" id="panel-members">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>All Members</h2>
+                    <p>Complete church membership directory</p>
+                </div>
+                <button class="btn-add" onclick="openModal('member')">+ Add Member</button>
+            </div>
+            <!-- Filters -->
+            <div class="members-filters">
+                <input type="text" id="memberSearch" placeholder="🔍 Search by name, email or phone..."
+                    oninput="filterMembers()" />
+                <select id="memberStatusFilter" onchange="filterMembers()">
+                    <option value="">All Statuses</option>
+                    <option value="new">New</option>
+                    <option value="regular">Regular</option>
+                    <option value="worker">Worker</option>
+                    <option value="leader">Leader</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <select id="memberGroupFilter" onchange="filterMembers()">
+                    <option value="">All Primary Groups</option>
+                    <option value="Men">Men</option>
+                    <option value="Women">Women</option>
+                    <option value="Youth">Youth</option>
+                    <option value="Children">Children</option>
+                </select>
+            </div>
+            <div class="members-filters" style="margin-top:-8px">
+                <select id="memberCustomGroupFilter" onchange="filterMembers()">
+                    <option value="">All Custom Groups</option>
+                </select>
+                <select id="memberBaptizedFilter" onchange="filterMembers()">
+                    <option value="">Baptism: All</option>
+                    <option value="yes">Baptized ✓</option>
+                    <option value="no">Not Yet Baptized</option>
+                </select>
+            </div>
+            <div class="members-stats" id="membersStats"></div>
+            <div class="data-table-wrapper" style="margin-top:16px">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Primary Group</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Groups/Roles</th>
+                            <th>Joined</th>
+                            <th>Baptized</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membersTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- GROUPS -->
+        <div class="panel" id="panel-groups">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Groups & Roles</h2>
+                    <p>Manage church groups and assign members to roles</p>
+                </div>
+                <button class="btn-add" onclick="openModal('group')">+ New Group</button>
+            </div>
+            <div id="groupsGrid" class="groups-grid"></div>
+        </div>
+
+        <!-- PRAYER -->
+        <div class="panel" id="panel-prayer">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Prayer Requests</h2>
+                    <p>View and respond to prayer requests</p>
+                </div>
+            </div>
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Request</th>
+                            <th>Private</th>
+                            <th>Answered</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prayerTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- MESSAGES -->
+        <div class="panel" id="panel-messages">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Contact Messages</h2>
+                    <p>Messages from the website contact form</p>
+                </div>
+            </div>
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Subject</th>
+                            <th>Message</th>
+                            <th>Read</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messagesTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ADMINS -->
+        <div class="panel" id="panel-admins">
+            <div class="panel-header">
+                <div class="panel-header-left">
+                    <h2>Admin Users</h2>
+                    <p>Manage dashboard access</p>
+                </div>
+                <button class="btn-add" onclick="openModal('admin')">+ Create Admin</button>
+            </div>
+            <div class="info-card">⚠️ Only Superadmins can create new admin accounts.</div>
+            <div class="data-table-wrapper" style="margin-top:24px">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminsTable">
+                        <tr>
+                            <td colspan="4" style="text-align:center;color:#999;padding:40px">Superadmin access
+                                required.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card" style="margin-top:32px">
+                <h3 style="margin-bottom:20px;font-family:'Cinzel',serif">Change My Password</h3>
+                <div class="form-group"><label>Current Password</label><input type="password" id="currentPw" /></div>
+                <div class="form-group"><label>New Password</label><input type="password" id="newPw" /></div>
+                <div class="form-group"><label>Confirm New Password</label><input type="password" id="confirmPw" />
+                </div>
+                <button class="btn-save" onclick="changePassword()">Update Password</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New</h3>
+                <button class="modal-close" onclick="closeModalNow()">×</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- GROUP MEMBERS MODAL -->
+    <div class="modal-overlay" id="groupMembersOverlay" onclick="if(event.target===this)closeGroupMembers()">
+        <div class="modal" style="max-width:780px">
+            <div class="modal-header">
+                <h3 id="groupMembersTitle">Group Members</h3>
+                <button class="modal-close" onclick="closeGroupMembers()">×</button>
+            </div>
+            <div class="modal-body" id="groupMembersBody"></div>
+        </div>
+    </div>
+
+    <!-- FORM BUILDER OVERLAY -->
+    <div class="modal-overlay" id="formBuilderOverlay" onclick="if(event.target===this)closeFormBuilder()">
+        <div class="modal form-builder-modal">
+            <div class="modal-header">
+                <h3 id="formBuilderTitle">Registration Form</h3>
+                <button class="modal-close" onclick="closeFormBuilder()">×</button>
+            </div>
+            <div class="modal-body" id="formBuilderBody"></div>
+        </div>
+    </div>
+
+    <!-- REGISTRATIONS OVERLAY -->
+    <div class="modal-overlay" id="registrationsOverlay" onclick="if(event.target===this)closeRegistrations()">
+        <div class="modal form-builder-modal">
+            <div class="modal-header">
+                <h3 id="registrationsTitle">Registrations</h3>
+                <button class="modal-close" onclick="closeRegistrations()">×</button>
+            </div>
+            <div class="modal-body" id="registrationsBody"></div>
+        </div>
+    </div>
+
+    <!-- FIELD EDITOR OVERLAY -->
+    <div class="modal-overlay" id="fieldEditorOverlay" onclick="if(event.target===this)closeFieldEditor()">
+        <div class="modal" style="max-width:520px;z-index:1200">
+            <div class="modal-header">
+                <h3 id="fieldEditorTitle">Add Field</h3>
+                <button class="modal-close" onclick="closeFieldEditor()">×</button>
+            </div>
+            <div class="modal-body" id="fieldEditorBody"></div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,9 @@
+# ⚠️ DOMAIN: Replace "https://lighthousechapel.org" with your real domain when deployed
+
+User-agent: *
+Allow: /
+
+# Keep admin panel out of Google
+Disallow: /admin/
+
+Sitemap: https://lighthousechapel.org/sitemap.xml

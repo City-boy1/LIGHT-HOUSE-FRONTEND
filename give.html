@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Give — Lighthouse Chapel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --navy: #0d2b52;
+            --navy-dark: #081a35;
+            --navy-mid: #143d6f;
+            --navy-light: #1e5298;
+            --gold: #b89240;
+            --gold-light: #d4af60;
+            --white: #fff;
+            --off-white: #f8f6f2;
+            --bg: #f0f2f8;
+            --text: #1a1a2e;
+            --text-mid: #555577;
+            --text-light: #888899;
+            --border: #e0e4f0;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(13, 43, 82, 0.1);
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Lato', sans-serif;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* NAV */
+        .nav {
+            background: var(--navy-dark);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-brand-icon {
+            color: var(--gold);
+            font-size: 1.4rem;
+        }
+
+        .nav-brand-name {
+            font-family: var(--font-heading);
+            color: var(--white);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+
+        .nav-back {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .nav-back:hover {
+            color: var(--gold);
+        }
+
+        /* HERO */
+        .hero {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-mid) 100%);
+            padding: 72px 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '✦';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20rem;
+            color: rgba(184, 146, 64, 0.04);
+            pointer-events: none;
+        }
+
+        .hero-tag {
+            display: inline-block;
+            background: rgba(184, 146, 64, 0.15);
+            color: var(--gold);
+            border: 1px solid rgba(184, 146, 64, 0.3);
+            padding: 6px 20px;
+            border-radius: 50px;
+            font-size: 0.72rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .hero-title {
+            font-family: var(--font-heading);
+            color: var(--white);
+            font-size: 2.4rem;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+
+        .hero-title span {
+            color: var(--gold);
+        }
+
+        .hero-scripture {
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 1rem;
+            max-width: 560px;
+            margin: 0 auto 8px;
+            line-height: 1.7;
+            font-style: italic;
+        }
+
+        .hero-scripture-ref {
+            color: var(--gold);
+            font-size: 0.82rem;
+            letter-spacing: 1px;
+        }
+
+        /* MAIN */
+        .main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 48px 32px;
+        }
+
+        /* GIVING TIERS */
+        .section-label {
+            font-family: var(--font-heading);
+            font-size: 0.72rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tiers-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .tier-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 24px 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-top: 4px solid var(--gold);
+            transition: 0.2s;
+        }
+
+        .tier-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(13, 43, 82, 0.12);
+        }
+
+        .tier-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .tier-name {
+            font-family: var(--font-heading);
+            font-size: 0.85rem;
+            color: var(--navy-dark);
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .tier-desc {
+            font-size: 0.78rem;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        /* PAYMENT METHODS */
+        .methods-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .method-card {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .method-header {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .method-header.momo {
+            background: linear-gradient(135deg, #ffcc02, #ff8c00);
+        }
+
+        .method-header.bank {
+            background: linear-gradient(135deg, var(--navy-mid), var(--navy-dark));
+        }
+
+        .method-header-icon {
+            font-size: 1.8rem;
+        }
+
+        .method-header-title {
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .method-header.momo .method-header-title {
+            color: var(--navy-dark);
+        }
+
+        .method-header.bank .method-header-title {
+            color: var(--white);
+        }
+
+        .method-body {
+            padding: 20px 24px;
+        }
+
+        .momo-provider {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: 0.2s;
+        }
+
+        .momo-provider:last-child {
+            margin-bottom: 0;
+        }
+
+        .momo-provider:hover {
+            border-color: var(--gold);
+            background: rgba(184, 146, 64, 0.03);
+        }
+
+        .momo-provider-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .momo-provider-icon {
+            font-size: 1.4rem;
+        }
+
+        .momo-provider-name {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .momo-provider-number {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            color: var(--navy-dark);
+            letter-spacing: 2px;
+        }
+
+        .copy-btn {
+            background: none;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            background: var(--gold);
+            color: var(--navy-dark);
+        }
+
+        .no-number {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            font-style: italic;
+            padding: 8px 0;
+        }
+
+        .bank-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .bank-row:last-child {
+            border-bottom: none;
+        }
+
+        .bank-row-label {
+            font-size: 0.78rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bank-row-value {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--navy-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* HOW TO GIVE */
+        .how-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: var(--shadow);
+            margin-bottom: 48px;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .step {
+            text-align: center;
+            padding: 20px 12px;
+            background: var(--off-white);
+            border-radius: var(--radius);
+            position: relative;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--navy-dark);
+            color: var(--gold);
+            font-family: var(--font-heading);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+
+        .step-icon {
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+        }
+
+        .step-title {
+            font-family: var(--font-heading);
+            font-size: 0.78rem;
+            color: var(--navy-dark);
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .step-desc {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        /* NOTE */
+        .giving-note {
+            background: rgba(184, 146, 64, 0.08);
+            border: 1px solid rgba(184, 146, 64, 0.25);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin-bottom: 48px;
+            color: var(--text-mid);
+            font-size: 0.88rem;
+            line-height: 1.7;
+        }
+
+        .giving-note strong {
+            color: var(--navy-dark);
+        }
+
+        /* SCRIPTURE BANNER */
+        .scripture-banner {
+            background: linear-gradient(135deg, var(--navy-dark), var(--navy-mid));
+            border-radius: 16px;
+            padding: 40px 32px;
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .scripture-banner-text {
+            font-family: var(--font-heading);
+            color: var(--white);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .scripture-banner-ref {
+            color: var(--gold);
+            font-size: 0.82rem;
+            letter-spacing: 1px;
+        }
+
+        /* LOADING */
+        .page-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 40vh;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid var(--border);
+            border-top-color: var(--navy-mid);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* FOOTER */
+        .give-footer {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .give-footer a {
+            color: var(--gold);
+        }
+
+        /* TOAST */
+        .toast-popup {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--success);
+            color: var(--white);
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .toast-popup.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 700px) {
+            .nav {
+                padding: 14px 20px;
+            }
+
+            .hero {
+                padding: 48px 20px;
+            }
+
+            .hero-title {
+                font-size: 1.6rem;
+            }
+
+            .main {
+                padding: 32px 16px;
+            }
+
+            .tiers-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .methods-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav class="nav">
+        <div class="nav-brand">
+            <span class="nav-brand-icon">✦</span>
+            <span class="nav-brand-name">LIGHTHOUSE CHAPEL</span>
+        </div>
+        <a href="index.html" class="nav-back">← Back to Website</a>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-tag">Give & Support</div>
+        <h1 class="hero-title">Give to the <span>Kingdom</span></h1>
+        <p class="hero-scripture">"Each of you should give what you have decided in your heart to give, not reluctantly
+            or under compulsion, for God loves a cheerful giver."</p>
+        <div class="hero-scripture-ref">2 Corinthians 9:7</div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="page-loading" id="pageLoading">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" style="display:none">
+        <main class="main">
+
+            <!-- GIVING TIERS -->
+            <div class="section-label">Ways to Give</div>
+            <div class="tiers-grid">
+                <div class="tier-card">
+                    <div class="tier-icon">🌾</div>
+                    <div class="tier-name">Tithe</div>
+                    <div class="tier-desc">Return 10% of your income as an act of worship and obedience to God</div>
+                </div>
+                <div class="tier-card" style="border-top-color:var(--navy-mid)">
+                    <div class="tier-icon">🙏</div>
+                    <div class="tier-name">Offering</div>
+                    <div class="tier-desc">Give above your tithe as a freewill offering from a grateful heart</div>
+                </div>
+                <div class="tier-card" style="border-top-color:var(--success)">
+                    <div class="tier-icon">🌱</div>
+                    <div class="tier-name">Seed</div>
+                    <div class="tier-desc">Plant a seed of faith, believing God to multiply it back to you</div>
+                </div>
+                <div class="tier-card" style="border-top-color:#8e44ad">
+                    <div class="tier-icon">🏛️</div>
+                    <div class="tier-name">Building Fund</div>
+                    <div class="tier-desc">Support the growth of our church facilities for God's kingdom</div>
+                </div>
+            </div>
+
+            <!-- PAYMENT METHODS -->
+            <div class="section-label">How to Give</div>
+            <div class="methods-grid">
+
+                <!-- MOBILE MONEY -->
+                <div class="method-card">
+                    <div class="method-header momo">
+                        <div class="method-header-icon">📱</div>
+                        <div class="method-header-title">Mobile Money</div>
+                    </div>
+                    <div class="method-body" id="momoBody">
+                        <div class="spinner" style="margin:20px auto;display:block"></div>
+                    </div>
+                </div>
+
+                <!-- BANK TRANSFER -->
+                <div class="method-card">
+                    <div class="method-header bank">
+                        <div class="method-header-icon">🏦</div>
+                        <div class="method-header-title">Bank Transfer</div>
+                    </div>
+                    <div class="method-body" id="bankBody">
+                        <div class="spinner" style="margin:20px auto;display:block"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- HOW TO GIVE VIA MOMO -->
+            <div class="how-card">
+                <div class="section-label" style="margin-bottom:0;border-bottom:none">How to Send via Mobile Money</div>
+                <div class="steps-grid">
+                    <div class="step">
+                        <div class="step-num">1</div>
+                        <div class="step-icon">📱</div>
+                        <div class="step-title">Dial</div>
+                        <div class="step-desc">Dial *170# on MTN, *110# on Telecel, or *500# on AirtelTigo</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">2</div>
+                        <div class="step-icon">💸</div>
+                        <div class="step-title">Send Money</div>
+                        <div class="step-desc">Select "Send Money" and enter the church number above</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">3</div>
+                        <div class="step-icon">✍️</div>
+                        <div class="step-title">Reference</div>
+                        <div class="step-desc">Add your name and giving type (e.g. "John Doe - Tithe") as reference
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">4</div>
+                        <div class="step-icon">✅</div>
+                        <div class="step-title">Confirm</div>
+                        <div class="step-desc">Enter your PIN to confirm. You'll receive an SMS confirmation</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GIVING NOTE -->
+            <div class="giving-note" id="givingNote" style="display:none">
+                <strong>📌 Note from the Church:</strong> <span id="givingNoteText"></span>
+            </div>
+
+            <!-- SCRIPTURE BANNER -->
+            <div class="scripture-banner">
+                <div class="scripture-banner-text">"Bring the whole tithe into the storehouse, that there may be food in
+                    my house. Test me in this," says the LORD Almighty, "and see if I will not throw open the floodgates
+                    of heaven and pour out so much blessing that there will not be room enough to store it."</div>
+                <div class="scripture-banner-ref">Malachi 3:10</div>
+            </div>
+
+        </main>
+
+        <footer class="give-footer">
+            <p>Lighthouse Chapel · Amasaman, Accra, Ghana</p>
+            <p style="margin-top:6px">Thank you for your generosity. <a href="index.html">← Return to Website</a></p>
+        </footer>
+    </div>
+
+    <div class="toast-popup" id="toastPopup"></div>
+
+    <script>
+        const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:5000/api' : '/api';
+
+        async function loadGivingPage() {
+            try {
+                const res = await fetch(`${API}/settings`);
+                const settings = await res.json();
+
+                document.getElementById('pageLoading').style.display = 'none';
+                document.getElementById('pageContent').style.display = 'block';
+
+                renderMomo(settings);
+                renderBank(settings);
+
+                if (settings.giving_note && settings.giving_note.trim()) {
+                    document.getElementById('givingNoteText').textContent = settings.giving_note;
+                    document.getElementById('givingNote').style.display = 'block';
+                }
+
+                if (settings.church_name) {
+                    document.title = `Give — ${settings.church_name}`;
+                }
+            } catch (err) {
+                document.getElementById('pageLoading').innerHTML = '<p style="color:#888;padding:40px">Unable to load giving details. Please try again.</p>';
+            }
+        }
+
+        function renderMomo(settings) {
+            const providers = [
+                { key: 'momo_mtn', name: 'MTN Mobile Money', icon: '🟡', color: '#ffcc02' },
+                { key: 'momo_telecel', name: 'Telecel Cash', icon: '🔴', color: '#e74c3c' },
+                { key: 'momo_airteltigo', name: 'AirtelTigo Money', icon: '🔵', color: '#143d6f' }
+            ];
+
+            const hasAny = providers.some(p => settings[p.key] && settings[p.key].trim());
+
+            if (!hasAny) {
+                document.getElementById('momoBody').innerHTML = '<p class="no-number">Mobile money details not yet configured. Please contact the church directly.</p>';
+                return;
+            }
+
+            document.getElementById('momoBody').innerHTML = providers
+                .filter(p => settings[p.key] && settings[p.key].trim())
+                .map(p => `
+          <div class="momo-provider">
+            <div class="momo-provider-left">
+              <div class="momo-provider-icon">${p.icon}</div>
+              <div>
+                <div class="momo-provider-name">${p.name}</div>
+                <div class="momo-provider-number">${settings[p.key]}</div>
+              </div>
+            </div>
+            <button class="copy-btn" onclick="copyText('${settings[p.key]}', '${p.name} number copied!')">Copy</button>
+          </div>
+        `).join('');
+        }
+
+        function renderBank(settings) {
+            const hasBank = settings.bank_name || settings.bank_account;
+
+            if (!hasBank) {
+                document.getElementById('bankBody').innerHTML = '<p class="no-number">Bank details not yet configured. Please contact the church directly.</p>';
+                return;
+            }
+
+            const rows = [
+                { label: 'Bank Name', value: settings.bank_name },
+                { label: 'Account Number', value: settings.bank_account, copy: true },
+                { label: 'Branch', value: settings.bank_branch },
+            ].filter(r => r.value && r.value.trim());
+
+            document.getElementById('bankBody').innerHTML = rows.map(r => `
+        <div class="bank-row">
+          <span class="bank-row-label">${r.label}</span>
+          <span class="bank-row-value">
+            ${r.value}
+            ${r.copy ? `<button class="copy-btn" onclick="copyText('${r.value}', 'Account number copied!')">Copy</button>` : ''}
+          </span>
+        </div>
+      `).join('');
+        }
+
+        function copyText(text, msg) {
+            navigator.clipboard.writeText(text).then(() => showToast(msg));
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toastPopup');
+            t.textContent = '✅ ' + msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        loadGivingPage();
+    </script>
+</body>
+
+</html>

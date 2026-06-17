@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Event Registration — Lighthouse Chapel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --navy: #0d2b52;
+            --navy-dark: #081a35;
+            --navy-mid: #143d6f;
+            --navy-light: #1e5298;
+            --gold: #b89240;
+            --gold-light: #d4af60;
+            --white: #fff;
+            --off-white: #f8f6f2;
+            --bg: #f0f2f8;
+            --text: #1a1a2e;
+            --text-mid: #555577;
+            --text-light: #888899;
+            --border: #e0e4f0;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --radius: 10px;
+            --shadow: 0 2px 16px rgba(13, 43, 82, 0.1);
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Lato', sans-serif;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* NAV */
+        .nav {
+            background: var(--navy-dark);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-brand-icon {
+            color: var(--gold);
+            font-size: 1.4rem;
+        }
+
+        .nav-brand-name {
+            font-family: var(--font-heading);
+            color: var(--white);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+
+        .nav-back {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .nav-back:hover {
+            color: var(--gold);
+        }
+
+        /* HERO */
+        .event-hero {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-mid) 100%);
+            padding: 48px 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-hero::before {
+            content: '✦';
+            position: absolute;
+            right: 48px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 8rem;
+            color: rgba(184, 146, 64, 0.06);
+            pointer-events: none;
+        }
+
+        .event-hero-inner {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .event-hero-tag {
+            display: inline-block;
+            background: rgba(184, 146, 64, 0.15);
+            color: var(--gold);
+            border: 1px solid rgba(184, 146, 64, 0.3);
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .event-hero-title {
+            font-family: var(--font-heading);
+            color: var(--white);
+            font-size: 2rem;
+            line-height: 1.3;
+            margin-bottom: 20px;
+        }
+
+        .event-hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .event-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.88rem;
+        }
+
+        .event-meta-icon {
+            color: var(--gold);
+            font-size: 1rem;
+        }
+
+        /* MAIN */
+        .main {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 40px 32px;
+        }
+
+        /* FORM CARD */
+        .form-card {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: 0 4px 32px rgba(13, 43, 82, 0.12);
+            overflow: hidden;
+        }
+
+        .form-card-header {
+            background: var(--navy-dark);
+            padding: 24px 32px;
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .form-card-title {
+            font-family: var(--font-heading);
+            color: var(--white);
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .form-card-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            margin-top: 6px;
+        }
+
+        .form-card-body {
+            padding: 32px;
+        }
+
+        /* FIELDS */
+        .reg-section-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-mid);
+        }
+
+        .form-group label .required {
+            color: var(--error);
+            margin-left: 2px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--text);
+            background: var(--off-white);
+            transition: 0.2s;
+            width: 100%;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--navy-mid);
+            background: var(--white);
+        }
+
+        .form-group input.error-field,
+        .form-group select.error-field,
+        .form-group textarea.error-field {
+            border-color: var(--error);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group .field-hint {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* CHECKBOX GROUP */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-item input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--navy-mid);
+            cursor: pointer;
+        }
+
+        .checkbox-item span {
+            font-size: 0.9rem;
+            color: var(--text-mid);
+        }
+
+        /* DIVIDER */
+        .form-divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 28px 0;
+        }
+
+        /* SUBMIT */
+        .submit-section {
+            margin-top: 28px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--navy-dark);
+            border: none;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 20px rgba(184, 146, 64, 0.3);
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(184, 146, 64, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-error-msg {
+            background: rgba(231, 76, 60, 0.08);
+            border: 1px solid rgba(231, 76, 60, 0.25);
+            color: var(--error);
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .form-error-msg.show {
+            display: block;
+        }
+
+        /* SUCCESS SCREEN */
+        .success-screen {
+            display: none;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .success-screen.show {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+
+        .success-title {
+            font-family: var(--font-heading);
+            color: var(--navy-dark);
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+        }
+
+        .success-sub {
+            color: var(--text-mid);
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+            line-height: 1.6;
+        }
+
+        .success-ref {
+            background: var(--off-white);
+            border: 2px dashed var(--gold);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .success-ref-label {
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .success-ref-code {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            color: var(--navy-dark);
+            letter-spacing: 3px;
+        }
+
+        .payment-box {
+            background: #fff8e1;
+            border: 2px solid var(--gold);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .payment-box-title {
+            font-family: var(--font-heading);
+            color: var(--navy-dark);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(184, 146, 64, 0.2);
+        }
+
+        .payment-row:last-child {
+            border-bottom: none;
+        }
+
+        .payment-row-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .payment-row-value {
+            font-size: 0.9rem;
+            color: var(--navy-dark);
+            font-weight: 700;
+        }
+
+        .payment-note {
+            font-size: 0.8rem;
+            color: var(--text-mid);
+            margin-top: 12px;
+            line-height: 1.6;
+            background: rgba(184, 146, 64, 0.08);
+            padding: 10px 14px;
+            border-radius: 8px;
+        }
+
+        .copy-btn {
+            background: none;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-left: 8px;
+        }
+
+        .copy-btn:hover {
+            background: var(--gold);
+            color: var(--navy-dark);
+        }
+
+        .success-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .btn-outline {
+            background: none;
+            border: 2px solid var(--navy-mid);
+            color: var(--navy-mid);
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-family: var(--font-heading);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-outline:hover {
+            background: var(--navy-mid);
+            color: var(--white);
+        }
+
+        /* LOADING */
+        .page-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid var(--border);
+            border-top-color: var(--navy-mid);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .page-loading p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* ERROR PAGE */
+        .page-error {
+            text-align: center;
+            padding: 80px 32px;
+        }
+
+        .page-error-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .page-error-title {
+            font-family: var(--font-heading);
+            color: var(--navy-dark);
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .page-error-msg {
+            color: var(--text-mid);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .btn-home {
+            display: inline-block;
+            background: var(--navy-dark);
+            color: var(--gold);
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-family: var(--font-heading);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        /* FOOTER */
+        .reg-footer {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+
+        .reg-footer a {
+            color: var(--gold);
+        }
+
+        @media (max-width: 600px) {
+            .nav {
+                padding: 14px 20px;
+            }
+
+            .event-hero {
+                padding: 32px 20px;
+            }
+
+            .event-hero-title {
+                font-size: 1.4rem;
+            }
+
+            .main {
+                padding: 24px 16px;
+            }
+
+            .form-card-body {
+                padding: 24px 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .event-hero::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav class="nav">
+        <div class="nav-brand">
+            <span class="nav-brand-icon">✦</span>
+            <span class="nav-brand-name">LIGHTHOUSE CHAPEL</span>
+        </div>
+        <a href="index.html" class="nav-back">← Back to Website</a>
+    </nav>
+
+    <!-- PAGE LOADING -->
+    <div class="page-loading" id="pageLoading">
+        <div class="spinner"></div>
+        <p>Loading registration form...</p>
+    </div>
+
+    <!-- PAGE ERROR -->
+    <div class="page-error" id="pageError" style="display:none">
+        <div class="page-error-icon">📋</div>
+        <div class="page-error-title">Form Not Available</div>
+        <div class="page-error-msg" id="pageErrorMsg">This registration form is not currently available.</div>
+        <a href="index.html" class="btn-home">← Return to Website</a>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="pageContent" style="display:none">
+        <!-- EVENT HERO -->
+        <div class="event-hero">
+            <div class="event-hero-inner">
+                <div class="event-hero-tag">Event Registration</div>
+                <h1 class="event-hero-title" id="heroTitle">Loading...</h1>
+                <div class="event-hero-meta" id="heroMeta"></div>
+            </div>
+        </div>
+
+        <!-- MAIN -->
+        <main class="main">
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="form-card-title" id="formTitle">Registration Form</div>
+                    <div class="form-card-desc" id="formDesc"></div>
+                </div>
+
+                <!-- FORM BODY -->
+                <div class="form-card-body" id="formBody">
+                    <form id="regForm" novalidate>
+                        <!-- Core fields -->
+                        <div class="reg-section-label">Your Information</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Full Name <span class="required">*</span></label>
+                                <input type="text" id="core_name" placeholder="Enter your full name" />
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" id="core_phone" placeholder="e.g. 0551234567" />
+                            </div>
+                        </div>
+                        <div class="form-group" id="email_field_wrap">
+                            <label>Email Address <span class="required" id="email_required_star"
+                                    style="display:none">*</span></label>
+                            <input type="email" id="core_email" placeholder="your@email.com" />
+                            <span class="field-hint" id="email_hint">Optional — provide it to receive your confirmation
+                                email</span>
+                        </div>
+
+                        <hr class="form-divider" />
+                        <div class="reg-section-label" id="customFieldsLabel" style="display:none">Additional
+                            Information</div>
+                        <div id="customFields"></div>
+
+                        <div class="submit-section">
+                            <button type="submit" class="btn-submit" id="submitBtn">Complete Registration</button>
+                            <div class="form-error-msg" id="formErrorMsg"></div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- SUCCESS SCREEN -->
+                <div class="success-screen" id="successScreen">
+                    <div class="success-icon">🎉</div>
+                    <div class="success-title">You're Registered!</div>
+                    <div class="success-sub" id="successSub">Your registration has been received. We look forward to
+                        seeing you!</div>
+
+                    <div class="success-ref">
+                        <div class="success-ref-label">Your Reference Number</div>
+                        <div class="success-ref-code" id="successRef">—</div>
+                    </div>
+
+                    <div class="payment-box" id="paymentBox" style="display:none">
+                        <div class="payment-box-title">💳 Complete Your Payment</div>
+                        <div class="payment-row">
+                            <span class="payment-row-label">Amount</span>
+                            <span class="payment-row-value" id="payAmount">—</span>
+                        </div>
+                        <div class="payment-row">
+                            <span class="payment-row-label">Provider</span>
+                            <span class="payment-row-value" id="payProvider">—</span>
+                        </div>
+                        <div class="payment-row">
+                            <span class="payment-row-label">Recipient Number</span>
+                            <span class="payment-row-value">
+                                <span id="payNumber">—</span>
+                                <button class="copy-btn" onclick="copyNumber()">Copy</button>
+                            </span>
+                        </div>
+                        <div class="payment-row">
+                            <span class="payment-row-label">Payment Reference</span>
+                            <span class="payment-row-value">
+                                <span id="payRef">—</span>
+                                <button class="copy-btn" onclick="copyRef()">Copy</button>
+                            </span>
+                        </div>
+                        <div class="payment-note" id="payNote">
+                            ⚠️ <strong>Important:</strong> Use your reference number as the payment description when
+                            sending money via MoMo. This helps us match and confirm your payment quickly.
+                        </div>
+                    </div>
+
+                    <div class="success-actions">
+                        <button class="btn-outline" onclick="window.location.href='index.html'">← Back to
+                            Website</button>
+                        <button class="btn-outline" id="calendarBtn" onclick="addToCalendar()">📅 Add to
+                            Calendar</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="reg-footer">
+            <p>Lighthouse Chapel · Amasaman, Accra, Ghana</p>
+            <p style="margin-top:6px"><a href="index.html">← Return to Website</a></p>
+        </footer>
+    </div>
+
+    <script>
+        const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:5000/api' : '/api';
+
+        let formData = null;
+        let eventId = null;
+
+        // Get eventId from URL
+        const params = new URLSearchParams(window.location.search);
+        eventId = params.get('event');
+
+        if (!eventId) {
+            showError('No event specified. Please go back and try again.');
+        } else {
+            loadForm();
+        }
+
+        async function loadForm() {
+            try {
+                const res = await fetch(`${API}/eventforms/event/${eventId}`);
+                if (!res.ok) {
+                    const data = await res.json();
+                    showError(data.error || 'This registration form is not currently available.');
+                    return;
+                }
+                formData = await res.json();
+                renderForm();
+            } catch (err) {
+                showError('Unable to connect. Please check your internet connection.');
+            }
+        }
+
+        function renderForm() {
+            document.getElementById('pageLoading').style.display = 'none';
+            document.getElementById('pageContent').style.display = 'block';
+
+            // Hero
+            document.title = `Register — ${formData.event_title} | Lighthouse Chapel`;
+            document.getElementById('heroTitle').textContent = formData.event_title;
+
+            const meta = [];
+            if (formData.event_date) {
+                const d = new Date(formData.event_date);
+                let dateStr = d.toLocaleDateString('en-GH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                if (formData.end_date && formData.end_date !== formData.event_date) {
+                    const d2 = new Date(formData.end_date);
+                    dateStr += ' – ' + d2.toLocaleDateString('en-GH', { month: 'long', day: 'numeric' });
+                }
+                meta.push(`<div class="event-meta-item"><span class="event-meta-icon">📅</span>${dateStr}</div>`);
+            }
+            if (formData.start_time) {
+                meta.push(`<div class="event-meta-item"><span class="event-meta-icon">🕐</span>${fmtTime(formData.start_time)}</div>`);
+            }
+            if (formData.location) {
+                meta.push(`<div class="event-meta-item"><span class="event-meta-icon">📍</span>${formData.location}</div>`);
+            }
+            document.getElementById('heroMeta').innerHTML = meta.join('');
+
+            // Form header
+            document.getElementById('formTitle').textContent = formData.title || 'Registration Form';
+            if (formData.description) document.getElementById('formDesc').textContent = formData.description;
+
+            // Email field — show as required if form requires it
+            if (formData.require_email) {
+                document.getElementById('email_required_star').style.display = 'inline';
+                document.getElementById('email_hint').textContent = 'Required for this event registration';
+            }
+
+            // Custom fields
+            const customDiv = document.getElementById('customFields');
+            if (formData.fields && formData.fields.length) {
+                document.getElementById('customFieldsLabel').style.display = 'block';
+                customDiv.innerHTML = formData.fields.map(f => renderField(f)).join('');
+            }
+        }
+
+        function renderField(f) {
+            const req = f.is_required ? '<span class="required">*</span>' : '';
+            const id = `field_${f.id}`;
+            const placeholder = f.placeholder || '';
+
+            switch (f.field_type) {
+                case 'text':
+                case 'email':
+                case 'phone':
+                case 'number':
+                    return `<div class="form-group">
+            <label>${f.field_label} ${req}</label>
+            <input type="${f.field_type === 'phone' ? 'tel' : f.field_type}" id="${id}" placeholder="${placeholder}" />
+          </div>`;
+                case 'textarea':
+                    return `<div class="form-group">
+            <label>${f.field_label} ${req}</label>
+            <textarea id="${id}" placeholder="${placeholder}"></textarea>
+          </div>`;
+                case 'select':
+                    const options = parseOptions(f.field_options);
+                    return `<div class="form-group">
+            <label>${f.field_label} ${req}</label>
+            <select id="${id}">
+              <option value="">Select an option</option>
+              ${options.map(o => `<option value="${o}">${o}</option>`).join('')}
+            </select>
+          </div>`;
+                case 'checkbox':
+                    const opts = parseOptions(f.field_options);
+                    return `<div class="form-group">
+            <label>${f.field_label} ${req}</label>
+            <div class="checkbox-group" id="${id}">
+              ${opts.map(o => `<label class="checkbox-item">
+                <input type="checkbox" value="${o}" />
+                <span>${o}</span>
+              </label>`).join('')}
+            </div>
+          </div>`;
+                default:
+                    return '';
+            }
+        }
+
+        function parseOptions(opts) {
+            if (!opts) return [];
+            try { return Array.isArray(opts) ? opts : JSON.parse(opts); }
+            catch { return String(opts).split(',').map(s => s.trim()); }
+        }
+
+        function fmtTime(t) {
+            if (!t) return '';
+            const [h, m] = t.split(':');
+            const hr = parseInt(h);
+            return `${hr > 12 ? hr - 12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
+        }
+
+        function showError(msg) {
+            document.getElementById('pageLoading').style.display = 'none';
+            document.getElementById('pageError').style.display = 'block';
+            document.getElementById('pageErrorMsg').textContent = msg;
+        }
+
+        // FORM SUBMIT
+        document.getElementById('regForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors();
+
+            const name = document.getElementById('core_name').value.trim();
+            const email = document.getElementById('core_email').value.trim();
+            const phone = document.getElementById('core_phone').value.trim();
+
+            // Name validation
+            if (!name) {
+                showFieldError('core_name', 'Full name is required.');
+                return;
+            }
+            if (name.length < 4) {
+                showFieldError('core_name', 'Please enter your full name (at least 4 characters).');
+                return;
+            }
+            if (!/^[a-zA-Z\s'-]+$/.test(name)) {
+                showFieldError('core_name', 'Name should contain letters only.');
+                return;
+            }
+
+            // Phone validation
+            if (phone && phone.replace(/[\s\-\+\(\)]/g, '').length < 10) {
+                showFieldError('core_phone', 'Please enter a valid phone number (at least 10 digits).');
+                return;
+            }
+
+            // Email validation
+            if (formData.require_email && !email) {
+                showFieldError('core_email', 'Email address is required for this event.');
+                return;
+            }
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showFieldError('core_email', 'Please enter a valid email address.');
+                return;
+            }
+
+            // Collect custom field responses
+            const responses = {};
+            let hasError = false;
+
+            if (formData.fields) {
+                for (const f of formData.fields) {
+                    const id = `field_${f.id}`;
+                    let value = null;
+
+                    if (f.field_type === 'checkbox') {
+                        const checkboxes = document.querySelectorAll(`#${id} input[type=checkbox]:checked`);
+                        value = Array.from(checkboxes).map(c => c.value).join(', ');
+                    } else {
+                        const el = document.getElementById(id);
+                        value = el ? el.value.trim() : '';
+                    }
+
+                    if (f.is_required && !value) {
+                        showFieldError(id, `"${f.field_label}" is required.`);
+                        hasError = true;
+                    } else if (value) {
+                        if (f.field_type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                            showFieldError(id, `"${f.field_label}" must be a valid email address.`);
+                            hasError = true;
+                        }
+                        if (f.field_type === 'phone' && value.replace(/[\s\-\+\(\)]/g, '').length < 10) {
+                            showFieldError(id, `"${f.field_label}" must be a valid phone number.`);
+                            hasError = true;
+                        }
+                        if (f.field_type === 'number' && isNaN(Number(value))) {
+                            showFieldError(id, `"${f.field_label}" must be a valid number.`);
+                            hasError = true;
+                        }
+                    }
+                    responses[f.id] = value;
+                }
+            }
+
+            if (hasError) return;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+
+            try {
+                const res = await fetch(`${API}/eventforms/${formData.id}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ respondent_name: name, respondent_email: email || null, respondent_phone: phone || null, responses })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showFormError(data.error || 'Registration failed. Please try again.');
+                    btn.disabled = false;
+                    btn.textContent = 'Complete Registration';
+                    return;
+                }
+
+                showSuccess(data);
+            } catch (err) {
+                showFormError('Unable to connect. Please check your internet and try again.');
+                btn.disabled = false;
+                btn.textContent = 'Complete Registration';
+            }
+        });
+
+        function showSuccess(data) {
+            document.getElementById('formBody').style.display = 'none';
+            const screen = document.getElementById('successScreen');
+            screen.classList.add('show');
+
+            document.getElementById('successRef').textContent = data.reference;
+            document.getElementById('successSub').textContent =
+                `Your registration for ${data.event_title} has been received. ${data.respondent_email ? 'A confirmation email has been sent to you.' : 'We look forward to seeing you!'}`;
+
+            if (data.payment_required) {
+                const box = document.getElementById('paymentBox');
+                box.style.display = 'block';
+                document.getElementById('payAmount').textContent = data.payment_amount ? `GHS ${parseFloat(data.payment_amount).toFixed(2)}` : 'See instructions';
+                document.getElementById('payProvider').textContent = data.momo_provider || 'Mobile Money';
+                document.getElementById('payNumber').textContent = data.mtn_number || '—';
+                document.getElementById('payRef').textContent = data.reference;
+                if (data.payment_instructions) {
+                    document.getElementById('payNote').innerHTML = `⚠️ <strong>Important:</strong> Use reference <strong>${data.reference}</strong> as your MoMo payment description. ${data.payment_instructions}`;
+                }
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showFieldError(id, msg) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.add('error-field');
+                const hint = document.createElement('span');
+                hint.className = 'field-hint';
+                hint.style.color = 'var(--error)';
+                hint.textContent = msg;
+                el.parentNode.appendChild(hint);
+            }
+        }
+
+        function showFormError(msg) {
+            const el = document.getElementById('formErrorMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.error-field').forEach(el => el.classList.remove('error-field'));
+            document.getElementById('formErrorMsg').classList.remove('show');
+            document.querySelectorAll('.field-hint[style]').forEach(el => el.remove());
+        }
+
+        function copyNumber() {
+            const num = document.getElementById('payNumber').textContent;
+            navigator.clipboard.writeText(num).then(() => showCopyToast('Number copied!'));
+        }
+
+        function copyRef() {
+            const ref = document.getElementById('payRef').textContent;
+            navigator.clipboard.writeText(ref).then(() => showCopyToast('Reference copied!'));
+        }
+
+        function showCopyToast(msg) {
+            const t = document.createElement('div');
+            t.textContent = msg;
+            t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:10px 24px;border-radius:50px;font-size:0.85rem;font-weight:700;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.2)';
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
+
+        function addToCalendar() {
+            if (!formData) return;
+            const d = new Date(formData.event_date);
+            const pad = n => String(n).padStart(2, '0');
+            const dateStr = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(formData.event_title)}&dates=${dateStr}/${dateStr}&location=${encodeURIComponent(formData.location || 'Lighthouse Chapel, Amasaman, Accra')}&details=${encodeURIComponent('Registered via Lighthouse Chapel website')}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+
+</html>
