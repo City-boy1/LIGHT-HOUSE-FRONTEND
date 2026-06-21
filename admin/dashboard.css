@@ -478,6 +478,19 @@ a { text-decoration: none; color: inherit; }
   gap: 8px;
 }
 
+@media (max-width: 480px) {
+  .monthly-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .monthly-stat-num {
+    font-size: 1.3rem;
+  }
+  .monthly-stat-desc {
+    font-size: 0.68rem;
+  }
+}
+
 .monthly-stat {
   background: var(--off-white);
   border-radius: var(--radius);
