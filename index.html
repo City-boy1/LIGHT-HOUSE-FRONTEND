@@ -106,7 +106,7 @@
                 <span class="hero-title-sub">CHAPEL</span>
             </h1>
             <p class="hero-church-full">Beloved Son Cathedral</p>
-            <p class="hero-location">📍 Amasaman, Accra, Ghana</p>
+            <p class="hero-location"><i class="fa-solid fa-location-dot"></i> Amasaman, Accra, Ghana</p>
             <p class="hero-tagline" id="heroTagline">A Place of Light, Love &amp; Transformation</p>
             <div class="hero-cta-group">
                 <a href="#services" class="btn-primary">Our Service Times</a>
@@ -118,6 +118,7 @@
             </div>
         </div>
     </section>
+    <div class="hero-spacer"></div>
 
     <!-- ===== WELCOME STRIP ===== -->
     <section class="welcome-strip">
@@ -151,12 +152,12 @@
                     <p class="about-body" id="aboutText">Loading...</p>
                     <div class="about-pillars">
                         <div class="pillar">
-                            <div class="pillar-icon">🙏</div>
+                            <div class="pillar-icon"></div>
                             <h4>Vision</h4>
                             <p id="visionText">Loading...</p>
                         </div>
                         <div class="pillar">
-                            <div class="pillar-icon">🌍</div>
+                            <div class="pillar-icon"></div>
                             <h4>Mission</h4>
                             <p id="missionText">Loading...</p>
                         </div>
@@ -183,23 +184,6 @@
             <div class="services-grid" id="servicesGrid">
                 <div class="loading-spinner light"></div>
             </div>
-        </div>
-    </section>
-
-    <section id="visit" class="visit-section" style="display:none">
-        <div class="visit-bg" id="visitBg"></div>
-        <div class="visit-overlay"></div>
-        <div class="visit-content">
-            <div class="visit-eyebrow">You Are Welcome Here</div>
-            <h2 class="visit-title">Plan Your Visit</h2>
-            <p class="visit-sub">Come as you are. Leave transformed. We'd love to meet you in person.</p>
-            <div class="visit-chips">
-                <div class="visit-chip">👋 Friendly &amp; Welcoming</div>
-                <div class="visit-chip">🎵 Spirit-filled Worship</div>
-                <div class="visit-chip">📖 Word-driven Teaching</div>
-                <div class="visit-chip">👨‍👩‍👧 Family Friendly</div>
-            </div>
-            <a href="#services" class="btn-primary" style="margin-top:8px">See Service Times</a>
         </div>
     </section>
 
@@ -262,28 +246,20 @@
     <!-- ===== GALLERY ===== -->
     <section id="gallery" class="section gallery-section">
         <div class="container">
-            <div class="section-eyebrow" style="text-align:center">Our Moments</div>
-            <h2 class="section-title" style="text-align:center">Gallery</h2>
-            <p class="section-subtitle" style="text-align:center;margin:0 auto 48px">Glimpses of God's work among us</p>
-
-            <!-- SLIDESHOW HERO -->
-            <div class="gal-slideshow" id="galSlideshow">
-                <div class="gal-slides" id="galSlides"></div>
-                <div class="gal-slide-overlay"></div>
-                <button class="gal-slide-arrow gal-prev" onclick="galSlide(-1)">&#8249;</button>
-                <button class="gal-slide-arrow gal-next" onclick="galSlide(1)">&#8250;</button>
-                <div class="gal-slide-dots" id="galDots"></div>
-                <div class="gal-slide-caption" id="galSlideCaption"></div>
-            </div>
+            <div class="section-eyebrow">Our Moments</div>
+            <h2 class="section-title">Gallery</h2>
+            <p class="section-subtitle">Glimpses of God's work among us</p>
 
             <!-- ALBUM TABS -->
             <div class="gal-tabs" id="galTabs"></div>
 
-            <!-- PREVIEW GRID -->
-            <div class="gal-preview-grid" id="galPreviewGrid"></div>
+            <!-- EDITORIAL GRID (top 3) -->
+            <div class="gal-editorial" id="galEditorial"></div>
 
-            <!-- VIEW ALL BUTTON -->
-            <div style="text-align:center;margin-top:36px">
+            <!-- STRIP (next 4) -->
+            <div class="gal-strip" id="galStrip"></div>
+
+            <div style="text-align:center">
                 <button class="gal-view-all-btn" id="galViewAllBtn" onclick="openGalleryModal()">
                     View All Photos <span id="galViewAllCount"></span>
                 </button>
@@ -310,20 +286,24 @@
         <button class="lightbox-next" id="lightboxNext">&#8250;</button>
         <p class="lightbox-caption" id="lightboxCaption"></p>
     </div>
-
-
-    <section id="churchLife" class="church-life-section" style="display:none">
-        <div class="container">
-            <div class="section-eyebrow" style="text-align:center">Our Community</div>
-            <h2 class="section-title" style="text-align:center;margin-bottom:8px">Life at Lighthouse</h2>
-            <p class="section-subtitle" style="text-align:center;margin:0 auto 48px">A glimpse into our church family
-            </p>
-            <div class="church-life-grid" id="churchLifeGrid">
-                <!-- populated by JS -->
+    <!-- ===== SERMON SERIES MODAL (episode list) ===== -->
+    <div class="sermon-modal-overlay" id="sermonSeriesModal" onclick="closeSermonSeriesModal(event)">
+        <div class="sermon-modal-box">
+            <div class="sermon-modal-header">
+                <span class="sermon-modal-title" id="sermonSeriesModalTitle">Series</span>
+                <button class="sermon-modal-close" onclick="closeSermonSeriesModal()">&times;</button>
             </div>
+            <div class="sermon-episode-list" id="sermonEpisodeList"></div>
         </div>
-    </section>
+    </div>
 
+    <!-- ===== SERMON PLAYER MODAL ===== -->
+    <div class="sermon-modal-overlay" id="sermonPlayerModal" onclick="closeSermonPlayer(event)">
+        <div class="sermon-modal-box sermon-player-modal-box">
+            <button class="sermon-modal-close sermon-player-close" onclick="closeSermonPlayer()">&times;</button>
+            <div class="sermon-player-content" id="sermonPlayerBody"></div>
+        </div>
+    </div>
 
     <!-- ===== BIBLE READER ===== -->
     <section id="bible" class="section bible-section">
@@ -401,21 +381,21 @@
             <div class="location-grid">
                 <div class="location-info">
                     <div class="location-detail-item">
-                        <div class="loc-icon">📍</div>
+                        <div class="loc-icon"><i class="fa-solid fa-location-dot"></i></div>
                         <div>
                             <h4>Physical Address</h4>
                             <p id="churchAddress">Amasaman, Accra, Ghana</p>
                         </div>
                     </div>
                     <div class="location-detail-item">
-                        <div class="loc-icon">📞</div>
+                        <div class="loc-icon"><i class="fa-solid fa-phone"></i></div>
                         <div>
                             <h4>Phone</h4>
                             <p id="churchPhone">Loading...</p>
                         </div>
                     </div>
                     <div class="location-detail-item">
-                        <div class="loc-icon">✉️</div>
+                        <div class="loc-icon"><i class="fa-solid fa-envelope"></i></div>
                         <div>
                             <h4>Email</h4>
                             <p id="churchEmail">Loading...</p>
@@ -424,7 +404,7 @@
                     <div class="social-links" id="socialLinks"></div>
                     <div class="location-next-service">
                         <h4>🕊 Next Service</h4>
-                        <p id="nextServiceInfo">See service times above</p>
+                        <p id="nextServiceInfo"><a href="#services">See service times above ↑</a></p>
                     </div>
                 </div>
                 <div class="location-map">
@@ -436,6 +416,22 @@
                     </iframe>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- ===== GIVE PROMO ===== -->
+    <section class="give-promo-section">
+        <div class="container give-promo-inner">
+            <div class="give-promo-text">
+                <div class="section-eyebrow">Partner With Us</div>
+                <h2 class="give-promo-title">Support the Ministry</h2>
+                <p class="give-promo-sub">Your generosity helps us reach more lives with the Gospel. Give securely
+                    online in just a few taps.</p>
+            </div>
+            <a href="give.html" class="give-promo-btn">
+                <span class="give-promo-btn-icon">💛</span>
+                <span>Donate Now</span>
+            </a>
         </div>
     </section>
 

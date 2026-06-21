@@ -11,7 +11,7 @@
   --font-heading: 'Cinzel', serif; --font-body: 'Lato', sans-serif;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font-body); background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+body { font-family: var(--font-body); background: var(--bg); color: var(--text); display: flex; min-height: 100vh; overflow-x: hidden; }
 a { text-decoration: none; color: inherit; }
 
 /* SIDEBAR */
@@ -38,7 +38,7 @@ a { text-decoration: none; color: inherit; }
 .logout-btn:hover { border-color: var(--error); color: var(--error); }
 
 /* MAIN */
-.main-content { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.main-content { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; max-width: 100vw; }
 .topbar { background: var(--white); padding: 16px 32px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 .topbar-title { font-family: var(--font-heading); font-size: 1rem; color: var(--navy-dark); letter-spacing: 1px; flex: 1; }
 .topbar-church { font-size: 0.8rem; color: var(--text-light); }
@@ -63,8 +63,8 @@ a { text-decoration: none; color: inherit; }
 .btn-sm { padding: 6px 12px !important; font-size: 0.75rem !important; }
 
 /* TABLE */
-.data-table-wrapper { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-.data-table { width: 100%; border-collapse: collapse; }
+.data-table-wrapper { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+.data-table { width: 100%; min-width: 720px; border-collapse: collapse; }
 .data-table thead { background: var(--navy-dark); }
 .data-table th { padding: 14px 16px; text-align: left; font-family: var(--font-heading); font-size: 0.72rem; letter-spacing: 1px; color: var(--gold); font-weight: 600; }
 .data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text); vertical-align: middle; }
@@ -372,4 +372,349 @@ a { text-decoration: none; color: inherit; }
 @keyframes slideUpCard {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+/* ============================================================
+   ADMINS PANEL
+   ============================================================ */
+.admins-table-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-self-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: rgba(13, 43, 82, 0.08);
+  color: var(--text-light);
+}
+
+/* ============================================================
+   MEDIA UPLOAD WIDGETS (announcements, events)
+   ============================================================ */
+.media-current-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px;
+  background: var(--off-white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+
+.media-current-thumb {
+  height: 64px;
+  width: 96px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.media-current-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.media-replace-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.media-file-hidden {
+  display: none;
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 4px;
+  display: block;
+}
+
+.form-checks-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   MEMBER ACTIVITY FEED
+   ============================================================ */
+.home-card--full {
+  grid-column: 1 / -1;
+}
+
+.activity-date {
+  font-size: 0.72rem;
+  color: var(--text-light);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   MONTHLY MEMBER STATS — home panel
+   ============================================================ */
+.monthly-stats-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-light);
+  margin-bottom: 14px;
+}
+
+.monthly-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.monthly-stat {
+  background: var(--off-white);
+  border-radius: var(--radius);
+  padding: 14px 10px;
+  text-align: center;
+  border-top: 3px solid var(--gold);
+}
+
+.monthly-stat-num {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  color: var(--navy-dark);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.monthly-stat-desc {
+  font-size: 0.72rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================
+   MEMBER ACTIVITY PANEL — members panel
+   ============================================================ */
+.activity-panel {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.activity-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--navy-dark);
+  cursor: pointer;
+  user-select: none;
+}
+
+.activity-panel-title {
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+.activity-panel-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+
+.activity-panel-body.activity-panel-open {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+/* ============================================================
+   ACTIVITY ROWS
+   ============================================================ */
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.activity-row:last-child {
+  border-bottom: none;
+}
+
+.activity-row:hover {
+  background: rgba(13,43,82,0.02);
+}
+
+.activity-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: var(--off-white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.activity-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activity-label {
+  font-size: 0.78rem;
+  color: var(--text-light);
+}
+
+.activity-arrow {
+  color: var(--navy-mid);
+  font-weight: 700;
+}
+
+.activity-date {
+  font-size: 0.72rem;
+  color: var(--text-light);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.activity-empty {
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   SERMON SERIES
+   ============================================================ */
+.sermon-series-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.sermon-series-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.sermon-series-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(13,43,82,0.15);
+}
+
+.sermon-series-cover {
+  width: 100%; height: 160px; object-fit: cover; display: block;
+  background: var(--navy-dark);
+}
+
+.sermon-series-cover-placeholder {
+  width: 100%; height: 160px;
+  background: linear-gradient(135deg, var(--navy-dark), var(--navy-mid));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem;
+}
+
+.sermon-series-body {
+  padding: 16px 18px;
+}
+
+.sermon-series-name {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  color: var(--navy-dark);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.sermon-series-meta {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  display: flex;
+  gap: 12px;
+}
+
+.sermon-series-singles {
+  background: var(--off-white);
+  border: 2px dashed var(--border);
+}
+
+/* Media slots inside sermon modal */
+.sermon-media-slot {
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  background: var(--off-white);
+}
+
+.sermon-media-slot-label {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  color: var(--navy-dark);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sermon-media-current {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+}
+
+.sermon-media-icon { font-size: 1.4rem; flex-shrink: 0; }
+
+.sermon-media-info { flex: 1; min-width: 0; }
+.sermon-media-filename {
+  font-size: 0.82rem; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sermon-media-sub { font-size: 0.72rem; color: var(--text-light); margin-top: 2px; }
+
+.sermon-media-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+@media (max-width: 600px) {
+  .sermon-series-grid { grid-template-columns: 1fr; }
 }

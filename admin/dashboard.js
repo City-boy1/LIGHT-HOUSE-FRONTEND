@@ -14,6 +14,7 @@ let pastorsList = [];
 let allMembers = [];
 let allGroups = [];
 let currentGroupId = null;
+let isSaving = false;  
 
 if (!TOKEN) { window.location.href = 'login.html'; }
 
@@ -224,6 +225,37 @@ async function loadGroupsList() {
   allGroups = Array.isArray(data) ? data : [];
 }
 
+async function loadMonthlyMemberStats() {
+  const el = document.getElementById('homeMonthlyStats');
+  if (!el) return;
+  const data = await api('GET', '/members/monthly-stats');
+  if (!data || data.error) return;
+
+  const month = new Date().toLocaleDateString('en-GH', { month: 'long' });
+  el.innerHTML = `
+    <div class="monthly-stats-label">Members · ${month}</div>
+    <div class="monthly-stats-grid">
+      <div class="monthly-stat">
+        <div class="monthly-stat-num">${data.joined_this_month || 0}</div>
+        <div class="monthly-stat-desc">🆕 Joined</div>
+      </div>
+      <div class="monthly-stat">
+        <div class="monthly-stat-num">${data.baptized_this_month || 0}</div>
+        <div class="monthly-stat-desc">✝️ Baptized</div>
+      </div>
+      <div class="monthly-stat">
+        <div class="monthly-stat-num">${data.promoted_this_month || 0}</div>
+        <div class="monthly-stat-desc">⬆️ Promoted</div>
+      </div>
+      <div class="monthly-stat">
+        <div class="monthly-stat-num">${data.inactive_this_month || 0}</div>
+        <div class="monthly-stat-desc">💤 Inactive</div>
+      </div>
+    </div>
+  `;
+}
+
+
 // ============================================================
 // HOME DASHBOARD
 // ============================================================
@@ -275,6 +307,9 @@ async function loadHome() {
 
   // SERMON STATS
   renderHomeSermonStats(sermonList);
+
+  // MONTHLY MEMBER STATS
+  loadMonthlyMemberStats();
 }
 
 function renderHomeBirthdays(members) {
@@ -343,8 +378,8 @@ function renderHomeRecentPrayer(prayerList) {
     <div class="home-list-item">
       <div class="home-list-avatar"><div class="home-avatar-placeholder">🙏</div></div>
       <div class="home-list-info">
-        <div class="home-list-name">${p.requester_name}</div>
-        <div class="home-list-sub">${p.request_text.substring(0, 60)}${p.request_text.length > 60 ? '...' : ''}</div>
+        <div class="home-list-name">${esc(p.requester_name)}</div>
+        <div class="home-list-sub">${esc(p.request_text.substring(0, 60))}${p.request_text.length > 60 ? '...' : ''}</div>
       </div>
       <div class="home-list-meta">
         ${p.is_private ? `<span class="badge badge-warning">Private</span>` : `<span class="badge badge-blue">Public</span>`}
@@ -952,20 +987,267 @@ function exportCSV(regs, fields) {
 // ============================================================
 // SERMONS
 // ============================================================
+let allSermons = [];
+let currentSermonView = 'series';
+let currentSeriesDetailName = null;
+let lockedSeriesName = null;
+
+function switchSermonView(view) {
+  currentSermonView = view;
+  document.getElementById('tabSeriesList').classList.toggle('active', view === 'series');
+  document.getElementById('tabAllSermons').classList.toggle('active', view === 'all');
+  document.getElementById('sermonSeriesView').style.display = view === 'series' ? '' : 'none';
+  document.getElementById('sermonTableView').style.display  = view === 'all'    ? '' : 'none';
+  if (view === 'series') loadSermonSeries();
+  else renderSermonTable();
+}
+
 async function loadSermons() {
-  const tbody = document.getElementById('sermonsTable');
-  tbody.innerHTML = tableLoading(6);
   const data = await api('GET', '/sermons/all');
-  if (!data || data.error) { tbody.innerHTML = tableEmpty(6, data?.error || 'Failed to load.'); return; }
-  if (!data.length) { tbody.innerHTML = tableEmpty(6, 'No sermons yet.'); return; }
-  tbody.innerHTML = data.map(s => `<tr>
-    <td><strong>${s.title}</strong>${s.scripture_reference ? `<br><small style="color:#b89240">${s.scripture_reference}</small>` : ''}</td>
+  allSermons = Array.isArray(data) ? data : [];
+  populateSermonFilters();
+  if (currentSermonView === 'series') loadSermonSeries();
+  else renderSermonTable();
+}
+
+function populateSermonFilters() {
+  const seriesSet = [...new Set(allSermons.map(s => s.series_name).filter(Boolean))];
+  const pastorSet = [...new Set(allSermons.map(s => s.pastor_name).filter(Boolean))];
+  document.getElementById('sermonSeriesFilter').innerHTML =
+    '<option value="">All Series</option>' +
+    seriesSet.map(s => `<option value="${s}">${s}</option>`).join('');
+  document.getElementById('sermonPastorFilter').innerHTML =
+    '<option value="">All Pastors</option>' +
+    pastorSet.map(p => `<option value="${p}">${p}</option>`).join('');
+}
+
+async function loadSermonSeries() {
+  const grid = document.getElementById('sermonSeriesGrid');
+  grid.innerHTML = '<div class="table-loading"><div class="spinner"></div></div>';
+  const data = await api('GET', '/sermons/series/list');
+
+  const singles = allSermons.filter(s => !s.series_name);
+  const seriesList = Array.isArray(data) ? data : [];
+
+  if (!seriesList.length && !singles.length) {
+    grid.innerHTML = '<div class="home-empty" style="grid-column:1/-1;padding:60px;text-align:center;color:#aaa">No sermons yet. Click + Add Sermon to begin.</div>';
+    return;
+  }
+
+  grid.innerHTML = seriesList.map(s => `
+    <div class="sermon-series-card" onclick="openSeriesDetail('${esc(s.series_name)}')">
+      ${s.cover_url
+        ? `<img class="sermon-series-cover" src="${s.cover_url}" alt="${esc(s.series_name)}" />`
+        : `<div class="sermon-series-cover-placeholder">🎙️</div>`}
+      <div class="sermon-series-body">
+        <div class="sermon-series-name">${s.series_name}</div>
+        <div class="sermon-series-meta">
+          <span>📖 ${s.sermon_count} sermon${s.sermon_count > 1 ? 's' : ''}</span>
+          <span>🗓 ${fmt(s.latest_date)}</span>
+        </div>
+      </div>
+    </div>
+  `).join('') + (singles.length ? `
+    <div class="sermon-series-card sermon-series-singles" onclick="openSeriesDetail('__singles__')">
+      <div class="sermon-series-cover-placeholder" style="height:120px;font-size:1.8rem">🎤</div>
+      <div class="sermon-series-body">
+        <div class="sermon-series-name">Standalone Sermons</div>
+        <div class="sermon-series-meta">
+          <span>📖 ${singles.length} sermon${singles.length > 1 ? 's' : ''}</span>
+          <span>Not part of a series</span>
+        </div>
+      </div>
+    </div>
+  ` : '');
+}
+
+function openSeriesDetail(seriesName) {
+  const overlay = document.getElementById('seriesDetailOverlay');
+  const title   = document.getElementById('seriesDetailTitle');
+  const body    = document.getElementById('seriesDetailBody');
+
+  const isSingles = seriesName === '__singles__';
+  const sermons = isSingles
+    ? allSermons.filter(s => !s.series_name)
+    : allSermons.filter(s => s.series_name === seriesName);
+
+  currentSeriesDetailName = seriesName;
+  title.textContent = isSingles ? '🎤 Standalone Sermons' : `📚 ${seriesName}`;
+
+  body.innerHTML = `
+    <div style="margin-bottom:16px;display:flex;justify-content:flex-end">
+      <button class="btn-add" onclick="addSermonToSeries()">+ Add Sermon</button>
+    </div>
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead><tr><th>Title</th><th>Pastor</th><th>Date</th><th>Media</th><th>Views</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${sermons.map(s => sermonRow(s, false)).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  overlay.classList.add('open');
+}
+
+function closeSeriesDetail() {
+  document.getElementById('seriesDetailOverlay').classList.remove('open');
+}
+
+function addSermonToSeries() {
+  lockedSeriesName = (currentSeriesDetailName && currentSeriesDetailName !== '__singles__')
+    ? currentSeriesDetailName
+    : null;
+  openModal('sermon');
+}
+
+function onSeriesSelectChange() {
+  const sel = document.getElementById('f_series_select').value;
+  document.getElementById('f_series_name_new').style.display = sel === '__new__' ? 'block' : 'none';
+}
+
+function getSeriesNameValue() {
+  if (lockedSeriesName) return lockedSeriesName;
+  const sel = gv('f_series_select');
+  if (sel === '__new__') return gv('f_series_name_new')?.trim() || null;
+  return sel || null;
+}
+
+function sermonRow(s, showSeries = true) {
+  const mediaIcons = [
+    s.audio_url     ? '🎵' : '<span style="color:#ddd">🎵</span>',
+    s.video_url     ? '🎬' : '<span style="color:#ddd">🎬</span>',
+    s.thumbnail_url ? '🖼️' : '<span style="color:#ddd">🖼️</span>',
+  ].join(' ');
+  return `<tr>
+    <td>
+      <strong>${s.title}</strong>
+      ${s.scripture_reference ? `<br><small style="color:#b89240">${s.scripture_reference}</small>` : ''}
+    </td>
     <td>${s.pastor_name || '—'}</td>
     <td>${fmt(s.sermon_date)}</td>
-    <td>${s.series_name || '—'}</td>
+    ${showSeries ? `<td>${s.series_name ? badge(s.series_name,'blue') : '—'}</td>` : ''}
+    <td>
+      <span style="font-size:1rem;letter-spacing:2px">${mediaIcons}</span>
+      <br><button class="btn-edit btn-sm" style="margin-top:4px" onclick="openSermonMedia('${s.id}','${esc(s.title)}')">🗂 Media</button>
+    </td>
     <td>${s.views || 0}</td>
     <td>${actionBtns(s.id, 'sermon')}</td>
-  </tr>`).join('');
+  </tr>`;
+}
+
+function filterSermons() {
+  const search  = document.getElementById('sermonSearch').value.toLowerCase();
+  const series  = document.getElementById('sermonSeriesFilter').value;
+  const pastor  = document.getElementById('sermonPastorFilter').value;
+  const filtered = allSermons.filter(s =>
+    (!search || s.title?.toLowerCase().includes(search) || s.pastor_name?.toLowerCase().includes(search)) &&
+    (!series || s.series_name === series) &&
+    (!pastor || s.pastor_name === pastor)
+  );
+  renderSermonTable(filtered);
+}
+
+function renderSermonTable(list) {
+  const data = list || allSermons;
+  const tbody = document.getElementById('sermonsTable');
+  if (!data.length) { tbody.innerHTML = tableEmpty(7, 'No sermons found.'); return; }
+  tbody.innerHTML = data.map(s => sermonRow(s, true)).join('');
+}
+
+async function openSermonMedia(sermonId, sermonTitle) {
+  const overlay = document.getElementById('sermonMediaOverlay');
+  const body    = document.getElementById('sermonMediaBody');
+  document.getElementById('sermonMediaTitle').textContent = `🗂 Media — ${sermonTitle}`;
+  body.innerHTML = '<div class="spinner"></div>';
+  overlay.classList.add('open');
+
+  const s = await api('GET', `/sermons/${sermonId}`);
+  if (!s || s.error) { body.innerHTML = '<p style="color:red">Failed to load.</p>'; return; }
+
+  body.innerHTML = `
+    ${sermonMediaSlot(s, 'audio', '🎵 Audio', s.audio_url, s.audio_cloudinary_id)}
+    ${sermonMediaSlot(s, 'video', '🎬 Video', s.video_url, s.video_cloudinary_id)}
+    ${sermonMediaSlot(s, 'thumbnail', '🖼️ Thumbnail', s.thumbnail_url, s.thumbnail_cloudinary_id)}
+    <div style="text-align:right;margin-top:8px">
+      <button class="btn-danger" onclick="closeSermonMedia()">Close</button>
+    </div>`;
+}
+
+function sermonMediaSlot(s, type, label, url, cloudId) {
+  const isImage = type === 'thumbnail';
+  const hasFile = !!url;
+  return `
+    <div class="sermon-media-slot">
+      <div class="sermon-media-slot-label">
+        ${label}
+        ${hasFile ? `<button class="btn-danger btn-sm" onclick="deleteSermonMedia('${s.id}','${type}','${esc(s.title)}')">🗑 Remove</button>` : ''}
+      </div>
+      ${hasFile ? `
+        <div class="sermon-media-current">
+          <div class="sermon-media-icon">${isImage ? `<img src="${url}" style="width:56px;height:40px;object-fit:cover;border-radius:4px">` : (type==='audio'?'🎵':'🎬')}</div>
+          <div class="sermon-media-info">
+            <div class="sermon-media-filename">${cloudId ? cloudId.split('/').pop() : 'External URL'}</div>
+            <div class="sermon-media-sub"><a href="${url}" target="_blank" style="color:#143d6f">View / Play ↗</a></div>
+          </div>
+        </div>
+      ` : `<div style="color:#aaa;font-size:0.82rem;margin-bottom:10px">No ${type} uploaded yet</div>`}
+      <div style="font-size:0.78rem;color:#888;margin-bottom:6px">${hasFile ? '🔄 Replace with new file:' : '⬆️ Upload file:'}</div>
+      <input type="file" id="mediaFile_${type}" accept="${isImage ? 'image/*' : type+'/*'}" style="font-size:0.82rem" />
+      <div style="font-size:0.72rem;color:#aaa;margin:6px 0">— or paste URL —</div>
+      <input type="url" id="mediaUrl_${type}" value="${url || ''}" placeholder="https://..." style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.82rem" />
+      <button class="btn-save btn-sm" style="margin-top:10px;width:100%" onclick="saveSermonMedia('${s.id}','${type}','${esc(s.title)}')">💾 Save ${label}</button>
+    </div>`;
+}
+
+async function saveSermonMedia(sermonId, type, sermonTitle) {
+  const fileInput = document.getElementById(`mediaFile_${type}`);
+  const urlInput  = document.getElementById(`mediaUrl_${type}`);
+
+  const formData = new FormData();
+  if (fileInput?.files[0]) {
+    showToast('⬆️ Uploading...', 'info');
+    formData.append(type === 'thumbnail' ? 'thumbnail' : type, fileInput.files[0]);
+  } else if (urlInput?.value.trim()) {
+    formData.append(`${type}_url`, urlInput.value.trim());
+  } else {
+    showToast('Choose a file or paste a URL', 'error'); return;
+  }
+
+  // Reuse the PUT endpoint — send only the changed field
+  try {
+    const r = await fetch(`${API}/sermons/${sermonId}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${TOKEN}` },
+      body: formData
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Failed');
+    showToast(`✅ ${type} updated!`, 'success');
+    openSermonMedia(sermonId, sermonTitle);
+    loadSermons();
+  } catch (err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+
+async function deleteSermonMedia(sermonId, type, sermonTitle) {
+  showConfirm({
+    icon: '🗂', title: `Remove ${type}`,
+    message: `This will permanently delete the ${type} file from Cloudinary. The sermon record stays intact.`,
+    confirmText: 'Remove File',
+    onConfirm: async () => {
+      const res = await api('DELETE', `/sermons/${sermonId}/media?type=${type}`);
+      if (res?.message) {
+        showToast(`🗑 ${type} removed`, 'info');
+        openSermonMedia(sermonId, sermonTitle);
+        loadSermons();
+      } else showToast(res?.error || 'Failed', 'error');
+    }
+  });
+}
+
+function closeSermonMedia() {
+  document.getElementById('sermonMediaOverlay').classList.remove('open');
 }
 
 // ============================================================
@@ -1098,7 +1380,7 @@ async function loadSettings() {
     'Social Media':          ['facebook_url', 'youtube_url', 'instagram_url', 'whatsapp_number'],
     'Location':              ['google_maps_embed'],
     '🔴 Live Video':         ['live_video_url'],
-    '🖼️ Homepage Photos':    ['hero_image_url', 'visit_image_url', 'life_image_1_url', 'life_image_2_url', 'life_image_3_url', 'life_image_4_url'],
+    '🖼️ Homepage Photos': ['hero_image_url'],
     '🏆 Year Motto':         ['motto_image_url', 'motto_title', 'motto_scripture'],
     '💰 Giving & Donations': ['momo_mtn', 'momo_telecel', 'momo_airteltigo', 'bank_name', 'bank_account', 'bank_branch', 'giving_note']
   };
@@ -1257,6 +1539,57 @@ async function loadMembers() {
   populateCustomGroupFilter();
   renderMembers(allMembers);
   renderMemberStats(allMembers);
+  loadMemberActivity();
+}
+
+function toggleActivityPanel() {
+  const body = document.getElementById('activityPanelBody');
+  const toggle = document.getElementById('activityToggleBtn');
+  if (!body) return;
+  const isOpen = body.classList.toggle('activity-panel-open');
+  toggle.textContent = isOpen ? '▲ Hide' : '▼ Show';
+}
+
+async function loadMemberActivity() {
+  const el = document.getElementById('memberActivityFeed');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  const data = await api('GET', '/members/activity');
+
+  if (!data || data.error || !data.length) {
+    el.innerHTML = '<div class="activity-empty">No member activity recorded yet. Activity appears here as members are added, baptized, or change status.</div>';
+    return;
+  }
+
+  const icons = {
+    joined: '🆕', status_change: '🔄', promoted: '⬆️',
+    baptized: '✝️', group_added: '➕', group_removed: '➖'
+  };
+  const labels = {
+    joined: 'Joined the church',
+    status_change: 'Status changed',
+    promoted: 'Promoted to Regular',
+    baptized: 'Baptized',
+    group_added: 'Added to group',
+    group_removed: 'Removed from group'
+  };
+
+  el.innerHTML = data.map(a => `
+    <div class="activity-row">
+      <div class="activity-icon">${icons[a.activity_type] || '📋'}</div>
+      <div class="activity-info">
+        <span class="activity-name">${a.member_name || 'Unknown Member'}</span>
+        <span class="activity-label">${labels[a.activity_type] || a.activity_type}${
+          a.old_value && a.new_value
+            ? ` <span class="activity-arrow">${a.old_value} → ${a.new_value}</span>`
+            : a.new_value
+              ? `: ${a.new_value}`
+              : ''
+        }</span>
+      </div>
+      <div class="activity-date">${fmt(a.created_at)}</div>
+    </div>
+  `).join('');
 }
 
 function filterMembers() {
@@ -1273,7 +1606,7 @@ function filterMembers() {
       m.phone?.includes(search);
     const matchStatus = !status || m.membership_status === status;
     const matchGroup = !group || m.primary_group === group;
-    const matchCustom = !customGroup || (m.groups && m.groups.some(g => g.id === customGroup));
+    const matchCustom = !customGroup || (m.group_ids && m.group_ids.includes(customGroup));
     const matchBaptized = !baptized ||
       (baptized === 'yes' && m.baptism_date) ||
       (baptized === 'no' && !m.baptism_date);
@@ -1319,23 +1652,6 @@ function renderMembers(members) {
       <td>${actionBtns(m.id, 'member')}</td>
     </tr>`;
   }).join('');
-}
-
-function filterMembers() {
-  const search = document.getElementById('memberSearch').value.toLowerCase();
-  const status = document.getElementById('memberStatusFilter').value;
-  const group = document.getElementById('memberGroupFilter').value;
-
-  const filtered = allMembers.filter(m => {
-    const matchSearch = !search ||
-      m.full_name?.toLowerCase().includes(search) ||
-      m.email?.toLowerCase().includes(search) ||
-      m.phone?.includes(search);
-    const matchStatus = !status || m.membership_status === status;
-    const matchGroup = !group || m.primary_group === group;
-    return matchSearch && matchStatus && matchGroup;
-  });
-  renderMembers(filtered);
 }
 
 async function viewMemberGroups(memberId, memberName) {
@@ -1519,8 +1835,8 @@ async function loadPrayer() {
   const data = await api('GET', '/prayer');
   if (!data || !data.length) { tbody.innerHTML = tableEmpty(6, 'No prayer requests yet.'); return; }
   tbody.innerHTML = data.map(p => `<tr>
-    <td><strong>${p.requester_name}</strong>${p.email ? `<br><small>${p.email}</small>` : ''}</td>
-    <td style="max-width:280px;font-size:0.85rem">${p.request_text.substring(0, 120)}${p.request_text.length > 120 ? '...' : ''}</td>
+    <td><strong>${esc(p.requester_name)}</strong>${p.email ? `<br><small>${esc(p.email)}</small>` : ''}</td>
+    <td style="max-width:280px;font-size:0.85rem">${esc(p.request_text.substring(0, 120))}${p.request_text.length > 120 ? '...' : ''}</td>
     <td>${p.is_private ? badge('Private', 'warning') : badge('Public', 'blue')}</td>
     <td>${p.is_answered ? badge('Answered 🙏', 'success') : badge('Pending', 'warning')}</td>
     <td>${fmt(p.created_at)}</td>
@@ -1546,10 +1862,10 @@ async function loadMessages() {
   const data = await api('GET', '/contact');
   if (!data || !data.length) { tbody.innerHTML = tableEmpty(7, 'No messages yet.'); return; }
   tbody.innerHTML = data.map(m => `<tr style="${!m.is_read ? 'background:rgba(184,146,64,0.04)' : ''}">
-    <td><strong>${m.name}</strong></td>
+    <td><strong>${esc(m.name)}</strong></td>
     <td><a href="mailto:${m.email}" style="color:#143d6f">${m.email}</a></td>
     <td>${m.subject || '—'}</td>
-    <td style="max-width:240px;font-size:0.85rem">${(m.message || '').substring(0, 100)}...</td>
+    <td style="max-width:240px;font-size:0.85rem">${esc((m.message || '').substring(0, 100))}...</td>
     <td>${m.is_read ? badge('Read', 'success') : badge('Unread', 'warning')}</td>
     <td>${fmt(m.created_at)}</td>
     <td><div class="table-actions">
@@ -1570,7 +1886,98 @@ async function markRead(id) {
 // ADMINS
 // ============================================================
 async function loadAdmins() {
-  if (ADMIN.role !== 'superadmin') return;
+  const tbody = document.getElementById('adminsTable');
+  if (!tbody) return;
+
+  if (ADMIN.role !== 'superadmin') {
+    tbody.innerHTML = `<tr><td colspan="5" class="table-loading">
+      Superadmin access required to view admin accounts.
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = tableLoading(5);
+  const data = await api('GET', '/auth/admins');
+  if (!data || data.error) {
+    tbody.innerHTML = tableEmpty(5, data?.error || 'Failed to load admins.');
+    return;
+  }
+  if (!data.length) {
+    tbody.innerHTML = tableEmpty(5, 'No admin accounts found.');
+    return;
+  }
+  tbody.innerHTML = data.map(a => {
+    const isSelf = a.id === ADMIN.id;
+    return `<tr>
+      <td><strong>${a.name}</strong> ${isSelf ? '<span class="admin-self-badge">You</span>' : ''}</td>
+      <td>${a.email}</td>
+      <td>${badge(a.role, a.role === 'superadmin' ? 'gold' : a.role === 'admin' ? 'blue' : 'success')}</td>
+      <td>${fmt(a.created_at)}</td>
+      <td>
+        <div class="admins-table-actions">
+          ${isSelf
+            ? '<span class="admin-self-badge">Current Session</span>'
+            : `<button class="btn-danger btn-sm" onclick="deleteAdmin('${a.id}','${esc(a.name)}')">🗑 Delete</button>`
+          }
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function deleteAdmin(id, name) {
+  showConfirm({
+    icon: '🔐',
+    title: 'Delete Admin Account',
+    message: `<strong>${name}</strong> will be permanently removed and will no longer be able to log in. This cannot be undone.`,
+    confirmText: 'Yes, Delete Admin',
+    confirmClass: 'confirm-btn-danger',
+    onConfirm: async () => {
+      const res = await api('DELETE', `/auth/admins/${id}`);
+      if (res?.message) {
+        showToast('🗑️ Admin account deleted', 'success');
+        loadAdmins();
+      } else {
+        showToast(res?.error || '❌ Failed to delete admin', 'error');
+      }
+    }
+  });
+}
+
+async function deleteAnnouncementImage(announcementId, publicId) {
+  showConfirm({
+    icon: '🖼️', title: 'Delete Image',
+    message: 'This will permanently remove the image from Cloudinary. The announcement itself will remain.',
+    confirmText: 'Delete Image', confirmClass: 'confirm-btn-danger',
+    onConfirm: async () => {
+      const res = await api('PATCH', `/announcements/${announcementId}/clear-image`, { cloudinary_public_id: publicId || null });
+      if (res && !res.error) {
+        showToast('🗑 Image removed', 'info');
+        closeModalNow();
+        loadAnnouncements();
+      } else {
+        showToast(res?.error || '❌ Failed to remove image', 'error');
+      }
+    }
+  });
+}
+
+async function deleteEventImage(eventId, publicId) {
+  showConfirm({
+    icon: '🖼️', title: 'Delete Image',
+    message: 'This will permanently remove the image from Cloudinary. The event itself will remain.',
+    confirmText: 'Delete Image', confirmClass: 'confirm-btn-danger',
+    onConfirm: async () => {
+      const res = await api('PATCH', `/events/${eventId}/clear-image`, { cloudinary_public_id: publicId || null });
+      if (res && !res.error) {
+        showToast('🗑 Image removed', 'info');
+        closeModalNow();
+        loadEvents();
+      } else {
+        showToast(res?.error || '❌ Failed to remove image', 'error');
+      }
+    }
+  });
 }
 
 async function changePassword() {
@@ -1593,6 +2000,10 @@ async function changePassword() {
 // MODAL SYSTEM
 // ============================================================
 function openModal(type, data = null) {
+  if (type === 'admin' && ADMIN.role !== 'superadmin') {
+    showToast('⛔ Only superadmins can create new admin accounts.', 'error');
+    return;
+  }
   editingId = data?.id || null;
   editingType = type;
   const overlay = document.getElementById('modalOverlay');
@@ -1606,7 +2017,7 @@ function openModal(type, data = null) {
       title: `${prefix} Announcement`,
       html: `
         <div class="form-group"><label>Title *</label><input type="text" id="f_title" value="${esc(data?.title)}" placeholder="Announcement title" /></div>
-        <div class="form-group"><label>Body / Content *</label><textarea id="f_body" rows="6">${esc(data?.body)}</textarea></div>
+        <div class="form-group"><label>Body / Content *</label><textarea id="f_body" rows="5">${esc(data?.body)}</textarea></div>
         <div class="form-row">
           <div class="form-group"><label>Category</label><select id="f_category">
             <option value="general" ${sel(data?.category,'general')}>General</option>
@@ -1614,31 +2025,47 @@ function openModal(type, data = null) {
             <option value="event" ${sel(data?.category,'event')}>Event</option>
             <option value="prayer" ${sel(data?.category,'prayer')}>Prayer</option>
           </select></div>
-          <div class="form-group"><label>Image</label>
-            ${data?.image_url ? `<img src="${data.image_url}" style="height:60px;border-radius:6px;margin-bottom:6px;object-fit:cover" />` : ''}
-            <input type="file" id="f_image_file" accept="image/*" />
-            <input type="hidden" id="f_image_url" value="${esc(data?.image_url)}" />
-          </div>
-        </div>
-        <div class="form-row">
           <div class="form-group"><label>Expires On (optional)</label><input type="datetime-local" id="f_expires_at" value="${data?.expires_at ? data.expires_at.slice(0,16) : ''}" /></div>
-          <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:16px;padding-top:24px">
-            <div class="form-check"><input type="checkbox" id="f_is_pinned" ${data?.is_pinned ? 'checked' : ''} /><label for="f_is_pinned">📌 Pinned</label></div>
-            <div class="form-check"><input type="checkbox" id="f_is_published" ${!data || data?.is_published ? 'checked' : ''} /><label for="f_is_published">Published</label></div>
-          </div>
+        </div>
+        <div class="form-group">
+          <label>Image</label>
+          ${data?.image_url
+            ? `<div class="media-current-wrap">
+                <img src="${data.image_url}" class="media-current-thumb" />
+                <div class="media-current-actions">
+                  <label class="btn-edit btn-sm media-replace-label">🔄 Replace<input type="file" accept="image/*" id="f_image_file" class="media-file-hidden" /></label>
+                  <button type="button" class="btn-danger btn-sm" onclick="deleteAnnouncementImage('${data.id}','${esc(data.cloudinary_public_id)}')">🗑 Delete Image</button>
+                </div>
+              </div>`
+            : `<input type="file" id="f_image_file" accept="image/*" />`}
+          <input type="hidden" id="f_image_url" value="${esc(data?.image_url)}" />
+          <input type="hidden" id="f_cloudinary_public_id" value="${esc(data?.cloudinary_public_id)}" />
+        </div>
+        <div class="form-group">
+          <label>Video URL (optional)</label>
+          <input type="url" id="f_video_url" value="${esc(data?.video_url)}" placeholder="YouTube, Facebook, Vimeo or any direct video link" />
+          <span class="field-hint">Paste any video link — YouTube, Facebook Live, Vimeo, etc. Shown below the announcement image.</span>
+        </div>
+        <div class="form-checks-row">
+          <div class="form-check"><input type="checkbox" id="f_is_pinned" ${data?.is_pinned ? 'checked' : ''} /><label for="f_is_pinned">📌 Pinned</label></div>
+          <div class="form-check"><input type="checkbox" id="f_is_published" ${!data || data?.is_published ? 'checked' : ''} /><label for="f_is_published">Published</label></div>
         </div>`
     },
     event: {
       title: `${prefix} Event`,
       html: `
         <div class="form-group"><label>Event Title *</label><input type="text" id="f_title" value="${esc(data?.title)}" /></div>
-        <div class="form-group"><label>Description</label><textarea id="f_description" rows="4">${esc(data?.description)}</textarea></div>
+        <div class="form-group"><label>Description</label><textarea id="f_description" rows="3">${esc(data?.description)}</textarea></div>
         <div class="form-row">
           <div class="form-group"><label>Start Date *</label><input type="date" id="f_event_date" value="${data?.event_date ? data.event_date.slice(0,10) : ''}" /></div>
           <div class="form-group"><label>End Date (multi-day events)</label><input type="date" id="f_end_date" value="${data?.end_date ? data.end_date.slice(0,10) : ''}" /></div>
         </div>
         <div class="form-row">
-          <div class="form-group" style="grid-column:1/-1"><label>Category</label><select id="f_category">
+          <div class="form-group"><label>Start Time</label><input type="time" id="f_start_time" value="${data?.start_time || ''}" /></div>
+          <div class="form-group"><label>End Time</label><input type="time" id="f_end_time" value="${data?.end_time || ''}" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Category</label><select id="f_category">
             <option value="general" ${sel(data?.category,'general')}>General</option>
             <option value="worship" ${sel(data?.category,'worship')}>Worship</option>
             <option value="youth" ${sel(data?.category,'youth')}>Youth</option>
@@ -1647,21 +2074,29 @@ function openModal(type, data = null) {
             <option value="children" ${sel(data?.category,'children')}>Children</option>
             <option value="outreach" ${sel(data?.category,'outreach')}>Outreach</option>
           </select></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Start Time</label><input type="time" id="f_start_time" value="${data?.start_time || ''}" /></div>
-          <div class="form-group"><label>End Time</label><input type="time" id="f_end_time" value="${data?.end_time || ''}" /></div>
-        </div>
-        <div class="form-row">
           <div class="form-group"><label>Location</label><input type="text" id="f_location" value="${esc(data?.location)}" /></div>
-          <div class="form-group"><label>Image</label>
-            ${data?.image_url ? `<img src="${data.image_url}" style="height:60px;border-radius:6px;margin-bottom:6px;object-fit:cover" />` : ''}
-            <input type="file" id="f_image_file" accept="image/*" />
-            <input type="hidden" id="f_image_url" value="${esc(data?.image_url)}" />
-          </div>
+        </div>
+        <div class="form-group">
+          <label>Event Image</label>
+          ${data?.image_url
+            ? `<div class="media-current-wrap">
+                <img src="${data.image_url}" class="media-current-thumb" />
+                <div class="media-current-actions">
+                  <label class="btn-edit btn-sm media-replace-label">🔄 Replace<input type="file" accept="image/*" id="f_image_file" class="media-file-hidden" /></label>
+                  <button type="button" class="btn-danger btn-sm" onclick="deleteEventImage('${data.id}','${esc(data.cloudinary_public_id)}')">🗑 Delete Image</button>
+                </div>
+              </div>`
+            : `<input type="file" id="f_image_file" accept="image/*" />`}
+          <input type="hidden" id="f_image_url" value="${esc(data?.image_url)}" />
+          <input type="hidden" id="f_cloudinary_public_id" value="${esc(data?.cloudinary_public_id)}" />
+        </div>
+        <div class="form-group">
+          <label>Video URL (optional)</label>
+          <input type="url" id="f_video_url" value="${esc(data?.video_url)}" placeholder="YouTube, Facebook, Vimeo or any direct video link" />
+          <span class="field-hint">Paste any video link to show a video player on the event card.</span>
         </div>
         <div class="form-group"><label>Registration Link (optional)</label><input type="url" id="f_registration_link" value="${esc(data?.registration_link)}" /></div>
-        <div style="display:flex;gap:20px">
+        <div class="form-checks-row">
           <div class="form-check"><input type="checkbox" id="f_is_featured" ${data?.is_featured ? 'checked' : ''} /><label for="f_is_featured">⭐ Featured</label></div>
           <div class="form-check"><input type="checkbox" id="f_is_published" ${!data || data?.is_published ? 'checked' : ''} /><label for="f_is_published">Published</label></div>
         </div>`
@@ -1679,7 +2114,28 @@ function openModal(type, data = null) {
         </div>
         <div class="form-row">
           <div class="form-group"><label>Scripture Reference</label><input type="text" id="f_scripture_reference" value="${esc(data?.scripture_reference)}" /></div>
-          <div class="form-group"><label>Series Name</label><input type="text" id="f_series_name" value="${esc(data?.series_name)}" /></div>
+          <div class="form-group">
+            <label>Series</label>
+            ${lockedSeriesName ? `
+              <div style="padding:11px 14px;background:#f0e8d8;border-radius:8px;color:#7a5d1e;font-size:0.88rem;font-weight:600">
+                📚 ${esc(lockedSeriesName)}
+              </div>
+              <input type="hidden" id="f_series_select" value="${esc(lockedSeriesName)}" />
+            ` : (() => {
+              const seriesNames = [...new Set(allSermons.map(s => s.series_name).filter(Boolean))];
+              const currentSeries = data?.series_name || '';
+              const isKnown = !currentSeries || seriesNames.includes(currentSeries);
+              return `
+              <select id="f_series_select" onchange="onSeriesSelectChange()">
+                <option value="">No Series (Standalone)</option>
+                ${seriesNames.map(name => `<option value="${esc(name)}" ${currentSeries === name ? 'selected' : ''}>${name}</option>`).join('')}
+                <option value="__new__" ${!isKnown ? 'selected' : ''}>+ Create New Series...</option>
+              </select>
+              <input type="text" id="f_series_name_new" placeholder="New series name"
+                value="${!isKnown ? esc(currentSeries) : ''}"
+                style="display:${!isKnown ? 'block' : 'none'};margin-top:8px" />`;
+            })()}
+          </div>
         </div>
         <div class="form-group"><label>Description</label><textarea id="f_description" rows="3">${esc(data?.description)}</textarea></div>
 
@@ -1768,37 +2224,86 @@ function openModal(type, data = null) {
         <div class="form-check"><input type="checkbox" id="f_is_active" ${!data || data?.is_active !== false ? 'checked' : ''} /><label for="f_is_active">Active / Visible on website</label></div>`
     },
     ministry: {
-      title: `${prefix} Ministry`,
-      html: `
-        <div class="form-row">
-          <div class="form-group"><label>Ministry Name *</label><input type="text" id="f_name" value="${esc(data?.name)}" /></div>
-          <div class="form-group"><label>Category</label><select id="f_category">
-            <option value="youth" ${sel(data?.category,'youth')}>Youth</option>
-            <option value="women" ${sel(data?.category,'women')}>Women</option>
-            <option value="men" ${sel(data?.category,'men')}>Men</option>
-            <option value="children" ${sel(data?.category,'children')}>Children</option>
-            <option value="music" ${sel(data?.category,'music')}>Music & Worship</option>
-            <option value="outreach" ${sel(data?.category,'outreach')}>Outreach</option>
-            <option value="prayer" ${sel(data?.category,'prayer')}>Prayer</option>
-            <option value="general" ${sel(data?.category,'general')}>General</option>
-          </select></div>
-        </div>
-        <div class="form-group"><label>Description</label><textarea id="f_description" rows="3">${esc(data?.description)}</textarea></div>
-        <div class="form-row">
-          <div class="form-group"><label>Leader Name</label><input type="text" id="f_leader_name" value="${esc(data?.leader_name)}" /></div>
-          <div class="form-group"><label>Leader Email</label><input type="email" id="f_leader_email" value="${esc(data?.leader_email)}" /></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Meeting Schedule</label><input type="text" id="f_meeting_schedule" value="${esc(data?.meeting_schedule)}" /></div>
-          <div class="form-group"><label>Display Order</label><input type="number" id="f_display_order" value="${data?.display_order || 0}" /></div>
-        </div>
-        <div class="form-group"><label>Image</label>
-          ${data?.image_url ? `<img src="${data.image_url}" style="height:80px;border-radius:6px;margin-bottom:6px;object-fit:cover" />` : ''}
-          <input type="file" id="f_image_file" accept="image/*" />
-          <input type="hidden" id="f_image_url" value="${esc(data?.image_url)}" />
-        </div>
-        <div class="form-check"><input type="checkbox" id="f_is_active" ${!data || data?.is_active !== false ? 'checked' : ''} /><label for="f_is_active">Active</label></div>`
-    },
+  title: `${prefix} Ministry`,
+  html: `
+  <div class="form-row">
+    <div class="form-group"><label>Ministry Name *</label><input type="text" id="f_name" value="${esc(data?.name)}" /></div>
+    <div class="form-group"><label>Category</label><select id="f_category">
+      <option value="youth" ${sel(data?.category,'youth')}>Youth</option>
+      <option value="women" ${sel(data?.category,'women')}>Women</option>
+      <option value="men" ${sel(data?.category,'men')}>Men</option>
+      <option value="children" ${sel(data?.category,'children')}>Children</option>
+      <option value="music" ${sel(data?.category,'music')}>Music & Worship</option>
+      <option value="outreach" ${sel(data?.category,'outreach')}>Outreach</option>
+      <option value="prayer" ${sel(data?.category,'prayer')}>Prayer</option>
+      <option value="general" ${sel(data?.category,'general')}>General</option>
+    </select></div>
+  </div>
+  <div class="form-group"><label>Description</label><textarea id="f_description" rows="3">${esc(data?.description)}</textarea></div>
+  <div class="form-row">
+    <div class="form-group"><label>Leader Name</label><input type="text" id="f_leader_name" value="${esc(data?.leader_name)}" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Meeting Schedule</label><input type="text" id="f_meeting_schedule" value="${esc(data?.meeting_schedule)}" /></div>
+    <div class="form-group"><label>Display Order</label><input type="number" id="f_display_order" value="${data?.display_order || 0}" /></div>
+  </div>
+
+  <div class="form-group">
+    <label>Card Media — choose one option</label>
+    <div style="font-size:0.8rem;color:#888;margin-bottom:12px">
+      This image or video fills the ministry card background on the public site.
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+      <div class="form-check">
+        <input type="radio" name="media_source" id="ms_none" value="none"
+          ${!data?.media_url ? 'checked' : ''} onchange="toggleMinistryMedia()" />
+        <label for="ms_none">No media — use gradient placeholder</label>
+      </div>
+      <div class="form-check">
+        <input type="radio" name="media_source" id="ms_url" value="url"
+          ${data?.media_url && data?.media_type === 'url' ? 'checked' : ''} onchange="toggleMinistryMedia()" />
+        <label for="ms_url">Paste a URL (direct image link or YouTube link)</label>
+      </div>
+      <div class="form-check">
+        <input type="radio" name="media_source" id="ms_upload" value="upload"
+          ${data?.media_url && data?.media_type !== 'url' ? 'checked' : ''} onchange="toggleMinistryMedia()" />
+        <label for="ms_upload">Upload from device (image JPG/PNG or video MP4, max 50MB)</label>
+      </div>
+    </div>
+
+    <div id="ms_url_wrap" style="display:none">
+      <input type="url" id="f_media_url_input"
+        value="${esc(data?.media_type === 'url' ? data.media_url : '')}"
+        placeholder="https://example.com/image.jpg  or  https://youtube.com/watch?v=..." />
+      <div style="font-size:0.75rem;color:#888;margin-top:4px">
+        Paste a direct image URL or a YouTube video link. Google image links will NOT work — right-click an image and copy image address instead.
+      </div>
+    </div>
+
+    <div id="ms_upload_wrap" style="display:none">
+      ${data?.media_url && data?.media_type !== 'url' ? `
+        <div style="margin-bottom:12px;padding:12px;background:#f8f6f2;border-radius:8px">
+          <div style="font-size:0.8rem;color:#666;margin-bottom:8px">Current media:</div>
+          ${data.media_type === 'video'
+            ? `<video src="${data.media_url}" controls style="max-width:100%;max-height:120px;border-radius:6px;display:block"></video>`
+            : `<img src="${data.media_url}" style="max-height:100px;border-radius:6px;object-fit:cover;display:block" />`}
+          <button type="button" class="btn-danger btn-sm" style="margin-top:8px"
+            onclick="deleteMinistryMedia('${data?.media_public_id}','${data?.media_type}')">
+            Delete this media
+          </button>
+        </div>` : ''}
+      <input type="file" id="f_media_file" accept="image/*,video/*" />
+    </div>
+
+    <input type="hidden" id="f_image_url" value="${esc(data?.image_url)}" />
+    <input type="hidden" id="f_media_url" value="${esc(data?.media_url)}" />
+    <input type="hidden" id="f_media_public_id" value="${esc(data?.media_public_id)}" />
+    <input type="hidden" id="f_media_type" value="${esc(data?.media_type || 'image')}" />
+  </div>
+
+  <div class="form-check"><input type="checkbox" id="f_is_active" ${!data || data?.is_active !== false ? 'checked' : ''} /><label for="f_is_active">Active</label></div>`
+},
     servicetime: {
       title: `${prefix} Service Time`,
       html: `
@@ -1896,7 +2401,7 @@ function openModal(type, data = null) {
     admin: {
       title: 'Create New Admin',
       html: `
-        <div class="info-card" style="margin-bottom:20px">Only superadmins can create new admins.</div>
+        <div class="info-card" style="margin-bottom:20px">Only superadmins can create new admin accounts.</div>
         <div class="form-group"><label>Full Name *</label><input type="text" id="f_name" /></div>
         <div class="form-group"><label>Email *</label><input type="email" id="f_email" /></div>
         <div class="form-group"><label>Temporary Password *</label><input type="password" id="f_password" /></div>
@@ -1927,6 +2432,7 @@ function closeModal(e) {
 function closeModalNow() {
   document.getElementById('modalOverlay').classList.remove('open');
   editingId = null; editingType = null;
+  lockedSeriesName = null;
 }
 
 function esc(val) { return val ? String(val).replace(/"/g, '&quot;').replace(/</g, '&lt;') : ''; }
@@ -1938,21 +2444,27 @@ function gc(id) { const el = document.getElementById(id); return el ? el.checked
 // SAVE ITEM
 // ============================================================
 async function saveItem() {
+  if (isSaving) return;
+  isSaving = true;
+  const saveBtn = document.querySelector('#modal .btn-save');
+  const originalBtnText = saveBtn ? saveBtn.textContent : '';
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '💾 Saving...'; }
+
   const type = editingType;
   const id = editingId;
 
   const builders = {
     announcement: () => ({
       endpoint: `/announcements${id ? '/' + id : ''}`,
-      body: { title: gv('f_title'), body: gv('f_body'), category: gv('f_category'), image_url: gv('f_image_url') || null, is_pinned: gc('f_is_pinned'), is_published: gc('f_is_published'), expires_at: gv('f_expires_at') || null }
+      body: { title: gv('f_title'), body: gv('f_body'), category: gv('f_category'), image_url: gv('f_image_url') || null, cloudinary_public_id: gv('f_cloudinary_public_id') || null, video_url: gv('f_video_url') || null, is_pinned: gc('f_is_pinned'), is_published: gc('f_is_published'), expires_at: gv('f_expires_at') || null }
     }),
     event: () => ({
       endpoint: `/events${id ? '/' + id : ''}`,
-      body: { title: gv('f_title'), description: gv('f_description'), event_date: gv('f_event_date'), end_date: gv('f_end_date') || null, start_time: gv('f_start_time') || null, end_time: gv('f_end_time') || null, location: gv('f_location'), image_url: gv('f_image_url') || null, category: gv('f_category'), is_featured: gc('f_is_featured'), is_published: gc('f_is_published'), registration_link: gv('f_registration_link') || null }
+      body: { title: gv('f_title'), description: gv('f_description'), event_date: gv('f_event_date'), end_date: gv('f_end_date') || null, start_time: gv('f_start_time') || null, end_time: gv('f_end_time') || null, location: gv('f_location'), image_url: gv('f_image_url') || null, cloudinary_public_id: gv('f_cloudinary_public_id') || null, video_url: gv('f_video_url') || null, category: gv('f_category'), is_featured: gc('f_is_featured'), is_published: gc('f_is_published'), registration_link: gv('f_registration_link') || null }
     }),
     sermon: () => ({
       endpoint: `/sermons${id ? '/' + id : ''}`,
-      body: { title: gv('f_title'), pastor_id: gv('f_pastor_id') || null, sermon_date: gv('f_sermon_date'), scripture_reference: gv('f_scripture_reference'), series_name: gv('f_series_name'), description: gv('f_description'), audio_url: gv('f_audio_url') || null, video_url: gv('f_video_url') || null, thumbnail_url: gv('f_thumbnail_url') || null, duration_minutes: gv('f_duration_minutes') || null, is_published: gc('f_is_published') },
+      body: { title: gv('f_title'), pastor_id: gv('f_pastor_id') || null, sermon_date: gv('f_sermon_date'), scripture_reference: gv('f_scripture_reference'), series_name: getSeriesNameValue(), description: gv('f_description'), audio_url: gv('f_audio_url') || null, video_url: gv('f_video_url') || null, thumbnail_url: gv('f_thumbnail_url') || null, duration_minutes: gv('f_duration_minutes') || null, is_published: gc('f_is_published') },
       isMultipart: true
     }),
     gallery: () => ({
@@ -1964,9 +2476,9 @@ async function saveItem() {
       body: { name: gv('f_name'), title: gv('f_title'), bio: gv('f_bio'), email: gv('f_email'), phone: gv('f_phone'), image_url: gv('f_image_url') || null, display_order: parseInt(gv('f_display_order') || 0), is_active: gc('f_is_active') }
     }),
     ministry: () => ({
-      endpoint: `/ministries${id ? '/' + id : ''}`,
-      body: { name: gv('f_name'), description: gv('f_description'), category: gv('f_category'), leader_name: gv('f_leader_name'), leader_email: gv('f_leader_email'), meeting_schedule: gv('f_meeting_schedule'), image_url: gv('f_image_url') || null, display_order: parseInt(gv('f_display_order') || 0), is_active: gc('f_is_active') }
-    }),
+  endpoint: `/ministries${id ? '/' + id : ''}`,
+  body: { name: gv('f_name'), description: gv('f_description'), category: gv('f_category'), leader_name: gv('f_leader_name'), meeting_schedule: gv('f_meeting_schedule'), image_url: gv('f_image_url') || null, display_order: parseInt(gv('f_display_order') || 0), is_active: gc('f_is_active') }
+  }),
     servicetime: () => ({
       endpoint: id ? `/settings/service-times/${id}` : '/settings/service-times',
       body: { day_of_week: gv('f_day_of_week'), service_name: gv('f_service_name'), start_time: gv('f_start_time'), end_time: gv('f_end_time') || null, location_detail: gv('f_location_detail'), description: gv('f_description'), display_order: parseInt(gv('f_display_order') || 0), is_active: gc('f_is_active') }
@@ -1986,7 +2498,9 @@ async function saveItem() {
   };
 
   if (!builders[type]) return;
-  const { endpoint, body } = builders[type]();
+  const built = builders[type]();
+  const endpoint = built.endpoint;
+  const body = built.body;
 
   // Handle image file upload if present (skip member — handled via multipart below)
   // Handle image file upload if present (skip member + sermon — handled via multipart below)
@@ -2001,6 +2515,50 @@ async function saveItem() {
       body.cloudinary_public_id = uploaded.public_id;
     }
   }
+
+  // Handle ministry media upload
+if (type === 'ministry') {
+  const mediaSource = document.querySelector('input[name="media_source"]:checked')?.value;
+  if (mediaSource === 'url') {
+    body.media_url = document.getElementById('f_media_url_input')?.value?.trim() || null;
+    body.media_type = 'url';
+    body.media_public_id = null;
+  } else if (mediaSource === 'upload') {
+    const mediaFile = document.getElementById('f_media_file');
+    if (mediaFile && mediaFile.files[0]) {
+      const file = mediaFile.files[0];
+      // Size guard
+      if (file.size > 50 * 1024 * 1024) {
+        showToast('❌ File too large. Max 50MB for videos, 10MB for images.', 'error'); return;
+      }
+      const isVideo = file.type.startsWith('video/');
+      showToast(`⬆️ Uploading ${isVideo ? 'video' : 'image'}...`, 'info');
+      const formData = new FormData();
+      formData.append(isVideo ? 'video' : 'image', file);
+      formData.append('folder', 'lighthouse/ministries');
+      const endpoint = isVideo ? `${API}/upload/video` : `${API}/upload/image`;
+      try {
+        const r = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${TOKEN}` },
+          body: formData
+        });
+        const uploadData = await r.json();
+        if (!r.ok) throw new Error(uploadData.error || 'Upload failed');
+        body.media_url = uploadData.url;
+        body.media_public_id = uploadData.public_id;
+        body.media_type = isVideo ? 'video' : 'image';
+      } catch (err) {
+        showToast('❌ Media upload failed: ' + err.message, 'error'); return;
+      }
+    }
+  } else {
+    // none selected — clear media
+    body.media_url = null;
+    body.media_public_id = null;
+    body.media_type = 'image';
+  }
+}
 
   const method = id ? 'PUT' : 'POST';
   let res;
@@ -2046,6 +2604,8 @@ async function saveItem() {
   } else {
     showToast(res?.error || '❌ Failed to save. Check required fields.', 'error');
   }
+  isSaving = false;
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = originalBtnText; }
 }
 
 // ============================================================
@@ -2114,6 +2674,31 @@ async function deleteItem(type, id) {
       } else {
         showToast(res?.error || '❌ Could not delete item', 'error');
       }
+    }
+  });
+}
+
+function toggleMinistryMedia() {
+  const val = document.querySelector('input[name="media_source"]:checked')?.value;
+  document.getElementById('ms_url_wrap').style.display = val === 'url' ? 'block' : 'none';
+  document.getElementById('ms_upload_wrap').style.display = val === 'upload' ? 'block' : 'none';
+}
+
+async function deleteMinistryMedia(publicId, mediaType) {
+  if (!publicId) return;
+  showConfirm({
+    icon: '🎬', title: 'Delete Media',
+    message: 'Remove this media file from this ministry?',
+    confirmText: 'Delete', confirmClass: 'confirm-btn-danger',
+    onConfirm: async () => {
+      const rtype = mediaType === 'video' ? 'video' : 'image';
+      await api('DELETE', `/upload/${rtype}`, { public_id: publicId });
+      document.getElementById('f_media_url').value = '';
+      document.getElementById('f_media_public_id').value = '';
+      document.getElementById('f_media_type').value = 'image';
+      document.getElementById('ms_upload_wrap').innerHTML =
+        '<input type="file" id="f_media_file" accept="image/*,video/*" />';
+      showToast('Media deleted', 'info');
     }
   });
 }

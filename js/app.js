@@ -23,6 +23,61 @@ function truncate(str, n) {
   return str && str.length > n ? str.substring(0, n) + '...' : str;
 }
 
+function buildVideoEmbed(url) {
+  if (!url || !url.trim()) return null;
+  url = url.trim();
+
+  // YouTube — all formats, muted autoplay attempt, no related videos
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|live\/|shorts\/)|youtu\.be\/)([^&?\s/]+)/);
+  if (yt) {
+    const params = 'rel=0&modestbranding=1&playsinline=1&mute=1&enablejsapi=0';
+    return `<iframe
+      src="https://www.youtube-nocookie.com/embed/${yt[1]}?${params}"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      loading="lazy"
+      title="Video"></iframe>`;
+  }
+
+  // Facebook video
+  if (url.includes('facebook.com') || url.includes('fb.watch')) {
+    const encoded = encodeURIComponent(url);
+    return `<iframe
+      src="https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=false&mute=1"
+      frameborder="0"
+      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+      allowfullscreen
+      loading="lazy"
+      title="Facebook Video"></iframe>`;
+  }
+
+  // Vimeo
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeo) {
+    return `<iframe
+      src="https://player.vimeo.com/video/${vimeo[1]}?muted=1&playsinline=1"
+      frameborder="0"
+      allow="autoplay; fullscreen; picture-in-picture"
+      allowfullscreen
+      loading="lazy"
+      title="Vimeo Video"></iframe>`;
+  }
+
+  // Direct video file — muted autoplay like a media card
+  if (url.match(/\.(mp4|webm|ogg)(\?|$)/i)) {
+    return `<video
+      autoplay muted loop playsinline
+      preload="metadata"
+      style="width:100%;height:100%;object-fit:cover;display:block;">
+      <source src="${url}" />
+    </video>`;
+  }
+
+  // Fallback — clickable link styled inside the container
+  return `<a href="${url}" target="_blank" rel="noopener" class="video-fallback-link">▶ Watch Video</a>`;
+}
+
 async function apiFetch(endpoint) {
   try {
     const res = await fetch(`${API}${endpoint}`);
@@ -50,6 +105,15 @@ window.addEventListener('scroll', () => {
   navbar.classList.toggle('scrolled', window.scrollY > 60);
   const st = $('#scrollTop');
   if (st) st.classList.toggle('visible', window.scrollY > 400);
+
+  // hero text fade/slide as next section covers it
+  const heroContent = $('.hero-content');
+  if (heroContent) {
+    const vh = window.innerHeight;
+    const progress = Math.min(window.scrollY / (vh * 0.7), 1);
+    heroContent.style.opacity = 1 - progress;
+    heroContent.style.transform = `translateY(${progress * -80}px)`;
+  }
 });
 
 navToggle.addEventListener('click', () => {
@@ -140,6 +204,31 @@ function showLiveBanner(url) {
   document.body.appendChild(modal);
 }
 
+function showSiteToast(message, duration = 3000) {
+  let toast = document.getElementById('siteToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'siteToast';
+    toast.style.cssText = `
+      position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);
+      background:var(--navy-dark);color:var(--white);
+      padding:12px 28px;border-radius:50px;font-size:0.85rem;font-weight:600;
+      box-shadow:0 8px 32px rgba(0,0,0,0.3);z-index:9999;
+      opacity:0;transition:all 0.3s ease;pointer-events:none;
+      border:1px solid rgba(184,146,64,0.3);letter-spacing:0.5px;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+  }, duration);
+}
+
 function openLiveModal() {
   const modal   = document.getElementById('liveModal');
   const iframe  = document.getElementById('liveIframe');
@@ -193,61 +282,12 @@ function dismissLiveBar() {
 // HERO PHOTO
 // ============================================================
 function applyHeroPhoto(settings) {
-  if (!settings.hero_image_url || !settings.hero_image_url.trim()) return;
   const bg = document.getElementById('heroBg');
   if (!bg) return;
-  bg.style.backgroundImage = `url('${settings.hero_image_url}')`;
+  const url = settings.hero_image_url?.trim()
+    || 'https://res.cloudinary.com/dux2ebfzl/image/upload/v1781651543/lighthouse/site/a54hmrk257g8jd4zrmku.jpg';
+  bg.style.backgroundImage = `url('${url}')`;
   bg.classList.add('has-photo');
-}
-
-// ============================================================
-// PLAN YOUR VISIT BANNER
-// ============================================================
-function loadVisitBanner(settings) {
-  const section = document.getElementById('visit');
-  const bg = document.getElementById('visitBg');
-  if (!section || !bg) return;
-
-  if (!settings.visit_image_url || !settings.visit_image_url.trim()) {
-    section.style.display = 'none';
-    return;
-  }
-
-  bg.style.backgroundImage = `url('${settings.visit_image_url}')`;
-  section.style.display = 'flex';
-}
-
-// ============================================================
-// CHURCH LIFE MOSAIC
-// ============================================================
-function loadChurchLife(settings) {
-  const section = document.getElementById('churchLife');
-  const grid = document.getElementById('churchLifeGrid');
-  if (!section || !grid) return;
-
-  const slots = [
-    settings.life_image_1_url,
-    settings.life_image_2_url,
-    settings.life_image_3_url,
-    settings.life_image_4_url,
-  ].filter(u => u && u.trim());
-
-  if (!slots.length) {
-    section.style.display = 'none';
-    return;
-  }
-
-  section.style.display = 'block';
-
-  const cells = [0,1,2,3].map(i => slots[i % slots.length]);
-
-  grid.innerHTML = cells.map(url => `
-    <div class="life-cell">
-      <img src="${url}" alt="Life at Lighthouse Chapel" loading="lazy"
-           onerror="this.parentElement.innerHTML='<div class=\\'life-placeholder\\'><span>📸</span></div>'" />
-      <div class="life-cell-overlay"></div>
-    </div>
-  `).join('');
 }
 
 // ============================================================
@@ -317,30 +357,30 @@ async function loadSettings() {
   // Social links
   const socialContainer = $('#socialLinks');
   const footerSocial = $('#footerSocial');
-  const socials = [
-    { key: 'facebook_url', label: '📘 Facebook', icon: 'Facebook' },
-    { key: 'youtube_url', label: '▶️ YouTube', icon: 'YouTube' },
-    { key: 'instagram_url', label: '📸 Instagram', icon: 'Instagram' },
-  ];
+
+  const svgFacebook = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.268h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>`;
+  const svgYouTube  = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>`;
+  const svgInstagram= `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>`;
+  const svgWhatsApp = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>`;
+
+  const svgFooterFB = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.268h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>`;
+  const svgFooterYT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>`;
+  const svgFooterIG = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>`;
+  const svgFooterWA = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>`;
+
   let socialHTML = '', footerHTML = '';
-  socials.forEach(s => {
-    if (settings[s.key]) {
-      socialHTML += `<a href="${settings[s.key]}" class="social-link" target="_blank" rel="noopener">${s.label}</a>`;
-      footerHTML += `<a href="${settings[s.key]}" class="footer-social-link" target="_blank" rel="noopener">${s.icon}</a>`;
-    }
-  });
+  if (settings.facebook_url)  { socialHTML += `<a href="${settings.facebook_url}" class="social-link" target="_blank" rel="noopener" title="Facebook">${svgFacebook}</a>`; footerHTML += `<a href="${settings.facebook_url}" class="footer-social-link" target="_blank" rel="noopener">${svgFooterFB} Facebook</a>`; }
+  if (settings.youtube_url)   { socialHTML += `<a href="${settings.youtube_url}" class="social-link" target="_blank" rel="noopener" title="YouTube">${svgYouTube}</a>`;   footerHTML += `<a href="${settings.youtube_url}" class="footer-social-link" target="_blank" rel="noopener">${svgFooterYT} YouTube</a>`; }
+  if (settings.instagram_url) { socialHTML += `<a href="${settings.instagram_url}" class="social-link" target="_blank" rel="noopener" title="Instagram">${svgInstagram}</a>`; footerHTML += `<a href="${settings.instagram_url}" class="footer-social-link" target="_blank" rel="noopener">${svgFooterIG} Instagram</a>`; }
   if (settings.whatsapp_number) {
     const waLink = `https://wa.me/${settings.whatsapp_number.replace(/[^0-9]/g, '')}`;
-    socialHTML += `<a href="${waLink}" class="social-link" target="_blank" rel="noopener">💬 WhatsApp</a>`;
-    footerHTML += `<a href="${waLink}" class="footer-social-link" target="_blank" rel="noopener">WhatsApp</a>`;
+    socialHTML += `<a href="${waLink}" class="social-link" target="_blank" rel="noopener" title="WhatsApp">${svgWhatsApp}</a>`;
+    footerHTML += `<a href="${waLink}" class="footer-social-link" target="_blank" rel="noopener">${svgFooterWA} WhatsApp</a>`;
   }
   if (socialContainer) socialContainer.innerHTML = socialHTML;
   if (footerSocial) footerSocial.innerHTML = footerHTML;
-
   // New sections — called here so they run after settings are fetched
   applyHeroPhoto(settings);
-  loadVisitBanner(settings);
-  loadChurchLife(settings);
   loadMotto(settings);
 
   // Live video
@@ -499,13 +539,22 @@ async function loadAnnouncements() {
   if (!grid) return;
 
   if (!announcements || !announcements.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📢</div><p>No announcements at this time. Check back soon!</p></div>`;
-    return;
-  }
+  document.getElementById('announcements')?.style.setProperty('display', 'none');
+  return;
+}
+document.getElementById('announcements')?.style.removeProperty('display');
 
-  grid.innerHTML = announcements.map(a => `
+  grid.innerHTML = announcements.map(a => {
+    const videoEmbed = buildVideoEmbed(a.video_url);
+    return `
     <div class="announcement-card ${a.is_pinned ? 'pinned' : ''}">
-      ${a.image_url ? `<img class="announcement-img" src="${a.image_url}" alt="${a.title}" loading="lazy" onerror="this.style.display='none'" />` : ''}
+      ${a.image_url
+        ? `<img class="announcement-img" src="${a.image_url}" alt="${a.title}" loading="lazy" onerror="this.style.display='none'" />`
+        : videoEmbed
+          ? ''
+          : `<div class="ann-accent-bar"></div>`
+      }
+      ${videoEmbed ? `<div class="ann-video-wrap">${videoEmbed}</div>` : ''}
       <div class="announcement-body">
         <div class="announcement-meta">
           <span class="ann-badge ${a.category}">${a.category}</span>
@@ -515,8 +564,8 @@ async function loadAnnouncements() {
         <p class="announcement-text">${truncate(a.body, 200)}</p>
         ${a.is_pinned ? `<div class="ann-pin">📌 Pinned Announcement</div>` : ''}
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 // ============================================================
@@ -554,9 +603,25 @@ async function renderEvents(events) {
   if (!grid) return;
 
   if (!events || !events.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><p>No upcoming events. Stay tuned!</p></div>`;
-    return;
+  // Only hide section if this is the initial load (no category selected)
+  const activeBtn = document.querySelector('.filter-btn.active');
+  const activeCat = activeBtn?.dataset.cat || '';
+  if (!activeCat) {
+    document.getElementById('events')?.style.setProperty('display', 'none');
+  } else {
+    // Category filter returned nothing — show feedback, keep section visible
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:48px 20px">
+        <div style="font-family:var(--font-heading);color:var(--navy-mid);font-size:1rem;margin-bottom:8px">
+          No ${activeCat} events scheduled
+        </div>
+        <p style="color:var(--text-light);font-size:0.88rem">Check back soon or explore other categories.</p>
+      </div>`;
+    showSiteToast(`No events found under "${activeCat}"`, 3000);
   }
+  return;
+}
+document.getElementById('events')?.style.removeProperty('display');
 
   const formChecks = await Promise.all(
     events.map(e =>
@@ -570,21 +635,25 @@ async function renderEvents(events) {
     const form = formChecks[i];
     const hasForm = form && form.is_active;
     const registerBtn = hasForm
-      ? `<a href="./event-register.html?event=${e.id}" class="event-tag event-register">📋 Register →</a>`
+      ? `<a href="./event-register.html?event=${e.id}" class="event-register">📋 Register Now →</a>`
       : e.registration_link
-        ? `<a href="${e.registration_link}" class="event-tag event-register" target="_blank">Register →</a>`
+        ? `<a href="${e.registration_link}" class="event-register" target="_blank">Register Now →</a>`
         : '';
+
+    const videoEmbed = buildVideoEmbed(e.video_url);
+    const imageHtml = e.image_url
+      ? `<div class="event-img-wrap"><img class="event-img" src="${e.image_url}" alt="${e.title}" loading="lazy" /></div>`
+      : videoEmbed
+        ? `<div class="event-video-wrap">${videoEmbed}</div>`
+        : `<div class="event-img-placeholder"></div>`;
 
     return `
       <div class="event-card">
-        ${e.image_url
-          ? `<img class="event-img" src="${e.image_url}" alt="${e.title}" loading="lazy" />`
-          : `<div class="event-img event-img-placeholder"><span>📅</span></div>`
-        }
-        <div class="event-date-band">📅 ${formatEventDate(e)}${e.start_time ? ` · ${formatTime(e.start_time)}` : ''}${e.end_time ? ` – ${formatTime(e.end_time)}` : ''}</div>
+        ${imageHtml}
         <div class="event-body">
+          <div class="event-date-band">📅 ${formatEventDate(e)}${e.start_time ? ` · ${formatTime(e.start_time)}` : ''}${e.end_time ? ` – ${formatTime(e.end_time)}` : ''}</div>
           <h3 class="event-title">${e.title}</h3>
-          ${e.description ? `<p class="event-desc">${truncate(e.description, 140)}</p>` : ''}
+          ${e.description ? `<p class="event-desc">${truncate(e.description, 200)}</p>` : ''}
           <div class="event-meta">
             ${e.location ? `<span class="event-tag">📍 ${e.location}</span>` : ''}
             ${e.category ? `<span class="event-tag">🏷 ${e.category}</span>` : ''}
@@ -608,23 +677,63 @@ async function loadMinistries() {
     return;
   }
 
-  grid.innerHTML = ministries.map(m => `
-    <div class="ministry-card">
-      ${m.image_url
-        ? `<img class="ministry-img" src="${m.image_url}" alt="${m.name}" loading="lazy" onerror="this.style.display='none'" />`
-        : `<div class="ministry-icon">${ministryIcon(m.category)}</div>`
+  grid.innerHTML = ministries.map(m => {
+    const mediaUrl = m.media_url || null;
+    const mediaType = m.media_type || 'image';
+
+    let mediaHTML = '';
+
+    if (!mediaUrl) {
+  mediaHTML = `
+    <div class="ministry-media ministry-media--image"
+      style="background:linear-gradient(135deg,var(--navy-dark) 0%,var(--navy-mid) 100%)">
+    </div>`;
+    } else if (mediaType === 'url') {
+      // Could be YouTube or image URL
+      const isYT = mediaUrl.includes('youtube.com') || mediaUrl.includes('youtu.be');
+      if (isYT) {
+        const ytId = mediaUrl.match(/(?:v=|embed\/|youtu\.be\/|shorts\/)([^&?\s/]+)/)?.[1];
+        const embedUrl = ytId
+        ? `https://www.youtube-nocookie.com/embed/${ytId}?controls=1&modestbranding=1&rel=0&playsinline=1`
+        : null;
+        mediaHTML = `
+          <div class="ministry-media ministry-media--video">
+            <iframe src="${embedUrl}" frameborder="0"
+              allow="accelerometer; autoplay; encrypted-media; gyroscope"
+              allowfullscreen loading="lazy"></iframe>
+          </div>`;
+      } else {
+        mediaHTML = `<div class="ministry-media ministry-media--image" style="background-image:url('${mediaUrl}')"></div>`;
       }
-      <div class="ministry-name">${m.name}</div>
-      <p class="ministry-desc">${truncate(m.description || '', 160)}</p>
-      ${m.leader_name && m.leader_name !== 'TBA' ? `<div class="ministry-leader">👤 ${m.leader_name}</div>` : ''}
-      ${m.meeting_schedule ? `<div class="ministry-schedule">🕐 ${m.meeting_schedule}</div>` : ''}
-    </div>
-  `).join('');
+    } else if (mediaType === 'video') {
+      mediaHTML = `
+        <div class="ministry-media ministry-media--video">
+          <video src="${mediaUrl}" autoplay muted loop playsinline
+            style="width:100%;height:100%;object-fit:cover"></video>
+        </div>`;
+    } else {
+      mediaHTML = `<div class="ministry-media ministry-media--image" style="background-image:url('${mediaUrl}')"></div>`;
+    }
+
+    return `
+      <div class="ministry-card">
+        ${mediaHTML}
+        <div class="ministry-card-body">
+          <div class="ministry-name">${m.name}</div>
+          <p class="ministry-desc">${truncate(m.description || '', 160)}</p>
+          ${m.leader_name && m.leader_name !== 'TBA' ? `<div class="ministry-leader"><i class="fa-solid fa-user"></i> ${m.leader_name}</div>` : ''}
+          ${m.meeting_schedule ? `<div class="ministry-schedule"><i class="fa-regular fa-clock"></i> ${m.meeting_schedule}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // ============================================================
 // SERMONS
 // ============================================================
+let sermonDataMap = {};
+let sermonSeriesGroups = [];
+
 async function loadSermons() {
   const sermons = await apiFetch('/sermons');
   const grid = $('#sermonsGrid');
@@ -635,26 +744,119 @@ async function loadSermons() {
     return;
   }
 
-  grid.innerHTML = sermons.slice(0, 9).map(s => `
-    <div class="sermon-card">
-      ${s.thumbnail_url
-        ? `<img class="sermon-thumb" src="${s.thumbnail_url}" alt="${s.title}" loading="lazy" onerror="this.style.display='none'" />`
-        : `<div class="sermon-thumb-placeholder"><div class="cross">✞</div></div>`
-      }
-      <div class="sermon-body">
-        ${s.series_name ? `<div class="sermon-series">${s.series_name}</div>` : ''}
-        <div class="sermon-title">${s.title}</div>
-        ${s.scripture_reference ? `<div class="sermon-scripture">${s.scripture_reference}</div>` : ''}
-        ${s.pastor_name ? `<div class="sermon-pastor">By ${s.pastor_name}</div>` : ''}
-        <div class="sermon-date">${formatDate(s.sermon_date)}</div>
+  sermonDataMap = {};
+  sermons.forEach(s => sermonDataMap[s.id] = s);
+
+  const seriesMap = {};
+  const singles = [];
+  sermons.forEach(s => {
+    if (s.series_name && s.series_name.trim()) {
+      (seriesMap[s.series_name] = seriesMap[s.series_name] || []).push(s);
+    } else {
+      singles.push(s);
+    }
+  });
+
+  sermonSeriesGroups = Object.keys(seriesMap).map(name => {
+    const episodes = seriesMap[name].sort((a, b) => new Date(b.sermon_date) - new Date(a.sermon_date));
+    return { name, episodes, latest: episodes[0], count: episodes.length };
+  }).sort((a, b) => new Date(b.latest.sermon_date) - new Date(a.latest.sermon_date));
+
+  if (singles.length) {
+    const sortedSingles = singles.sort((a, b) => new Date(b.sermon_date) - new Date(a.sermon_date));
+    sermonSeriesGroups.push({ name: '__singles__', episodes: sortedSingles, latest: sortedSingles[0], count: sortedSingles.length });
+  }
+
+  renderSermonSeriesGrid();
+}
+
+function renderSermonSeriesGrid() {
+  const grid = $('#sermonsGrid');
+  grid.innerHTML = sermonSeriesGroups.map(g => {
+    const isSingles = g.name === '__singles__';
+    const cover = g.latest.thumbnail_url;
+    const label = isSingles ? 'Standalone Messages' : g.name;
+    return `
+      <div class="sermon-series-card" onclick="openSermonSeries('${esc2(g.name)}')">
+        ${cover
+          ? `<img class="sermon-series-cover" src="${cover}" alt="${esc2(label)}" loading="lazy" onerror="this.style.display='none'" />`
+          : `<div class="sermon-series-cover-placeholder"><span class="cross">✞</span></div>`}
+        <div class="sermon-series-overlay"></div>
+        <div class="sermon-series-info">
+          <div class="sermon-series-name">${label}</div>
+          <div class="sermon-series-meta">
+            <span>🎙️ ${g.count} message${g.count > 1 ? 's' : ''}</span>
+            <span>🗓 ${formatDate(g.latest.sermon_date)}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openSermonSeries(name) {
+  const group = sermonSeriesGroups.find(g => g.name === name);
+  if (!group) return;
+  const isSingles = name === '__singles__';
+  $('#sermonSeriesModalTitle').textContent = isSingles ? 'Standalone Messages' : name;
+  $('#sermonEpisodeList').innerHTML = group.episodes.map((s, i) => `
+    <div class="sermon-episode-row" onclick="openSermonPlayer('${s.id}')">
+      <div class="sermon-episode-num">${isSingles ? '🎙️' : (group.episodes.length - i)}</div>
+      <div class="sermon-episode-info">
+        <div class="sermon-episode-title">${s.title}</div>
+        <div class="sermon-episode-meta">
+          ${s.pastor_name ? `${s.pastor_name} · ` : ''}${formatDate(s.sermon_date)}${s.scripture_reference ? ` · ${s.scripture_reference}` : ''}
+        </div>
       </div>
-      ${(s.audio_url || s.video_url) ? `
-        <div class="sermon-links">
-          ${s.audio_url ? `<a href="${s.audio_url}" class="sermon-link audio" target="_blank" rel="noopener">🔊 Audio</a>` : ''}
-          ${s.video_url ? `<a href="${s.video_url}" class="sermon-link video" target="_blank" rel="noopener">▶ Video</a>` : ''}
-        </div>` : ''}
+      <div class="sermon-episode-play">▶</div>
+    </div>`).join('');
+  $('#sermonSeriesModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSermonSeriesModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  $('#sermonSeriesModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function openSermonPlayer(id) {
+  const s = sermonDataMap[id];
+  if (!s) return;
+  const videoEmbed = s.video_url ? buildVideoEmbed(s.video_url) : null;
+
+  let mediaHTML;
+  if (videoEmbed) {
+    mediaHTML = `<div class="sermon-player-video">${videoEmbed}</div>`;
+  } else if (s.audio_url) {
+    mediaHTML = `<div class="sermon-player-audio"><audio controls src="${s.audio_url}" style="width:100%"></audio></div>`;
+  } else {
+    mediaHTML = `<div class="sermon-player-empty">No media available for this message yet.</div>`;
+  }
+
+  $('#sermonPlayerBody').innerHTML = `
+    <div class="sermon-player-header">
+      ${s.series_name ? `<div class="sermon-player-series">${s.series_name}</div>` : ''}
+      <h3 class="sermon-player-title">${s.title}</h3>
+      <div class="sermon-player-meta">
+        ${s.pastor_name ? `${s.pastor_name} · ` : ''}${formatDate(s.sermon_date)}${s.scripture_reference ? ` · ${s.scripture_reference}` : ''}
+      </div>
     </div>
-  `).join('');
+    ${mediaHTML}
+    ${s.description ? `<p class="sermon-player-desc">${s.description}</p>` : ''}
+    ${s.audio_url && videoEmbed ? `<a href="${s.audio_url}" target="_blank" rel="noopener" class="sermon-link audio" style="display:inline-block;margin-top:14px">🔊 Listen to Audio</a>` : ''}
+  `;
+  $('#sermonPlayerModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSermonPlayer(e) {
+  if (e && e.target !== e.currentTarget) return;
+  $('#sermonPlayerModal').classList.remove('open');
+  const audio = document.querySelector('#sermonPlayerBody audio');
+  if (audio) audio.pause();
+  const iframe = document.querySelector('#sermonPlayerBody iframe');
+  if (iframe) iframe.src = '';
+  document.body.style.overflow = '';
 }
 
 // ============================================================
@@ -663,9 +865,6 @@ async function loadSermons() {
 let galAllItems   = [];   // every photo from API
 let galAlbums     = [];   // album names
 let galActive     = '';   // current album tab ('' = All)
-let galSlideItems = [];   // photos in slideshow
-let galSlideIdx   = 0;
-let galSlideTimer = null;
 let galLightboxItems = []; // photos currently in lightbox context
 let galLightboxIdx   = 0;
  
@@ -675,188 +874,123 @@ async function loadGallery() {
     apiFetch('/gallery'),
     apiFetch('/gallery/albums')
   ]);
- 
+
   galAllItems = Array.isArray(items) ? items : [];
   galAlbums   = Array.isArray(albums) ? albums : [];
- 
+
   if (!galAllItems.length) {
-    const grid = document.getElementById('galPreviewGrid');
-    if (grid) grid.innerHTML = `<div class="gal-empty"><div class="gal-empty-icon">📸</div><p>Photos coming soon. Check back after our next service!</p></div>`;
-    document.getElementById('galSlideshow').style.display = 'none';
-    document.getElementById('galViewAllBtn').style.display = 'none';
+    const ed = document.getElementById('galEditorial');
+    if (ed) ed.innerHTML = `<div class="gal-empty" style="grid-column:1/-1"><div class="gal-empty-icon">📸</div><p>Photos coming soon.</p></div>`;
+    const btn = document.getElementById('galViewAllBtn');
+    if (btn) btn.style.display = 'none';
     return;
   }
- 
+
   buildTabs();
   renderGallery('');
- 
-  // Lightbox nav
+
   document.getElementById('lightboxPrev')?.addEventListener('click', () => galLightboxNav(-1));
   document.getElementById('lightboxNext')?.addEventListener('click', () => galLightboxNav(1));
   document.getElementById('lightboxClose')?.addEventListener('click', closeLightbox);
-  document.getElementById('lightbox')?.addEventListener('click', e => { if (e.target === document.getElementById('lightbox')) closeLightbox(); });
+  document.getElementById('lightbox')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('lightbox')) closeLightbox();
+  });
   document.addEventListener('keydown', e => {
     if (document.getElementById('lightbox')?.classList.contains('active')) {
-      if (e.key === 'ArrowLeft') galLightboxNav(-1);
+      if (e.key === 'ArrowLeft')  galLightboxNav(-1);
       if (e.key === 'ArrowRight') galLightboxNav(1);
-      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'Escape')     closeLightbox();
     }
   });
 }
- 
-// ── TABS ──
+
 function buildTabs() {
   const container = document.getElementById('galTabs');
   if (!container) return;
-  const tabs = ['All', ...galAlbums];
-  container.innerHTML = tabs.map(t => `
+  container.innerHTML = ['All', ...galAlbums].map(t => `
     <button class="gal-tab ${t === 'All' ? 'active' : ''}"
       onclick="switchGalTab('${t === 'All' ? '' : t}', this)">${t}</button>
   `).join('');
 }
- 
+
 function switchGalTab(album, btn) {
   galActive = album;
   document.querySelectorAll('.gal-tab').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   renderGallery(album);
 }
- 
-// ── RENDER ──
+
 function renderGallery(album) {
   const pool = album ? galAllItems.filter(i => i.album === album) : galAllItems;
- 
-  // Slideshow — up to 8, shuffled
-  const shuffled = shuffle([...pool]);
-  galSlideItems = shuffled.slice(0, 8);
-  buildSlideshow();
- 
-  // Preview grid — 6 items (different from slideshow if possible)
-  const rest    = shuffled.slice(galSlideItems.length);
-  const preview = [...rest, ...shuffled].slice(0, 6);
-  buildPreviewGrid(preview, pool);
- 
-  // View all button count
   const countEl = document.getElementById('galViewAllCount');
   if (countEl) countEl.textContent = pool.length;
+
+  buildEditorial(pool);
+  buildStrip(pool);
 }
- 
-// ── SLIDESHOW ──
-function buildSlideshow() {
-  const container = document.getElementById('galSlides');
-  const dots      = document.getElementById('galDots');
-  if (!container) return;
- 
-  clearInterval(galSlideTimer);
-  galSlideIdx = 0;
- 
-  if (!galSlideItems.length) {
-    document.getElementById('galSlideshow').style.display = 'none';
+
+function buildEditorial(pool) {
+  const el = document.getElementById('galEditorial');
+  if (!el) return;
+  if (!pool.length) {
+    el.innerHTML = `<div class="gal-empty" style="grid-column:1/-1"><div class="gal-empty-icon">📸</div><p>No photos in this album yet.</p></div>`;
     return;
   }
-  document.getElementById('galSlideshow').style.display = 'block';
- 
-  container.innerHTML = galSlideItems.map((item, i) => `
-    <div class="gal-slide ${i === 0 ? 'active' : ''}"
-      style="background-image:url('${item.image_url}')"
-      data-caption="${esc2(item.caption || item.title || '')}">
-    </div>
-  `).join('');
- 
-  dots.innerHTML = galSlideItems.map((_, i) =>
-    `<button class="gal-dot ${i === 0 ? 'active' : ''}" onclick="galGoTo(${i})"></button>`
-  ).join('');
- 
-  updateSlideCaption();
-  galSlideTimer = setInterval(() => galSlide(1), 4500);
-}
- 
-function galSlide(dir) {
-  const slides = document.querySelectorAll('.gal-slide');
-  const dots   = document.querySelectorAll('.gal-dot');
-  if (!slides.length) return;
-  slides[galSlideIdx].classList.remove('active');
-  dots[galSlideIdx]?.classList.remove('active');
-  galSlideIdx = (galSlideIdx + dir + slides.length) % slides.length;
-  slides[galSlideIdx].classList.add('active');
-  dots[galSlideIdx]?.classList.add('active');
-  updateSlideCaption();
-  resetSlideTimer();
-}
- 
-function galGoTo(idx) {
-  const slides = document.querySelectorAll('.gal-slide');
-  const dots   = document.querySelectorAll('.gal-dot');
-  if (!slides.length) return;
-  slides[galSlideIdx].classList.remove('active');
-  dots[galSlideIdx]?.classList.remove('active');
-  galSlideIdx = idx;
-  slides[galSlideIdx].classList.add('active');
-  dots[galSlideIdx]?.classList.add('active');
-  updateSlideCaption();
-  resetSlideTimer();
-}
- 
-function resetSlideTimer() {
-  clearInterval(galSlideTimer);
-  galSlideTimer = setInterval(() => galSlide(1), 4500);
-}
- 
-function updateSlideCaption() {
-  const active = document.querySelector('.gal-slide.active');
-  const el     = document.getElementById('galSlideCaption');
-  if (el) el.textContent = active?.dataset.caption || '';
-}
- 
-// ── PREVIEW GRID ──
-function buildPreviewGrid(items, fullPool) {
-  const grid = document.getElementById('galPreviewGrid');
-  if (!grid) return;
- 
-  if (!items.length) {
-    grid.innerHTML = `<div class="gal-empty"><div class="gal-empty-icon">📸</div><p>No photos yet in this album.</p></div>`;
-    return;
-  }
- 
-  grid.innerHTML = items.map((item, i) => `
-    <div class="gal-preview-item" onclick="openLightboxFromPool(${i}, ${JSON.stringify(items).replace(/"/g,'&quot;')})">
-      <img src="${item.image_url}" alt="${item.title || item.caption || 'Church photo'}" loading="lazy" />
-      <div class="gal-preview-item-overlay">
-        <span class="gal-preview-caption">${item.caption || item.title || ''}</span>
+  const top = pool.slice(0, 3);
+  el.innerHTML = top.map((item, i) => `
+    <div class="gal-cell ${i === 0 ? 'gal-cell--tall' : ''}"
+      onclick="openLightboxFromPool(${i}, ${JSON.stringify(pool).replace(/"/g,'&quot;')})">
+      <img src="${item.image_url}" alt="${item.title || ''}" loading="lazy" />
+      <div class="gal-cell-overlay">
+        <span class="gal-cell-caption">${item.caption || item.title || ''}</span>
       </div>
     </div>
   `).join('');
 }
- 
-// ── GALLERY MODAL (View All) ──
+
+function buildStrip(pool) {
+  const el = document.getElementById('galStrip');
+  if (!el) return;
+  const strip = pool.slice(3, 7);
+  const remaining = pool.length - 7;
+  if (!strip.length) { el.innerHTML = ''; return; }
+  el.innerHTML = strip.map((item, i) => {
+    const isLast = i === strip.length - 1 && remaining > 0;
+    return `
+      <div class="gal-strip-cell"
+        onclick="${isLast ? 'openGalleryModal()' : `openLightboxFromPool(${i + 3}, ${JSON.stringify(pool).replace(/"/g,'&quot;')})`}">
+        <img src="${item.image_url}" alt="${item.title || ''}" loading="lazy" />
+        ${isLast ? `<div class="gal-more-overlay">+${remaining + 1}<span>more photos</span></div>` : ''}
+      </div>`;
+  }).join('');
+}
+
 function openGalleryModal() {
-  const pool    = galActive ? galAllItems.filter(i => i.album === galActive) : galAllItems;
-  const modal   = document.getElementById('galleryModal');
-  const grid    = document.getElementById('galModalGrid');
-  const title   = document.getElementById('galModalTitle');
+  const pool  = galActive ? galAllItems.filter(i => i.album === galActive) : galAllItems;
+  const modal = document.getElementById('galleryModal');
+  const grid  = document.getElementById('galModalGrid');
+  const title = document.getElementById('galModalTitle');
   if (!modal) return;
- 
   title.textContent = galActive ? `📁 ${galActive}` : 'All Photos';
   grid.innerHTML = pool.map((item, i) => `
-    <div class="gal-modal-item" onclick="openLightboxFromPool(${i}, ${JSON.stringify(pool).replace(/"/g,'&quot;')})">
+    <div class="gal-modal-item"
+      onclick="openLightboxFromPool(${i}, ${JSON.stringify(pool).replace(/"/g,'&quot;')})">
       <img src="${item.image_url}" alt="${item.title || ''}" loading="lazy" />
     </div>
   `).join('');
- 
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
- 
+
 function closeGalleryModal() {
   document.getElementById('galleryModal')?.classList.remove('open');
   document.body.style.overflow = '';
 }
- 
+
 document.getElementById('galleryModal')?.addEventListener('click', e => {
   if (e.target === document.getElementById('galleryModal')) closeGalleryModal();
 });
- 
-// ── LIGHTBOX ──
+
 function openLightboxFromPool(idx, pool) {
   galLightboxItems = Array.isArray(pool) ? pool : [];
   galLightboxIdx   = idx;
@@ -864,7 +998,7 @@ function openLightboxFromPool(idx, pool) {
   document.getElementById('lightbox')?.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
- 
+
 function showLightboxItem() {
   const item = galLightboxItems[galLightboxIdx];
   if (!item) return;
@@ -872,35 +1006,31 @@ function showLightboxItem() {
   const cap = document.getElementById('lightboxCaption');
   if (img) { img.src = item.image_url; img.alt = item.title || ''; }
   if (cap) cap.textContent = item.caption || item.title || '';
- 
-  // Show/hide nav arrows
   const prev = document.getElementById('lightboxPrev');
   const next = document.getElementById('lightboxNext');
   if (prev) prev.style.display = galLightboxItems.length > 1 ? '' : 'none';
   if (next) next.style.display = galLightboxItems.length > 1 ? '' : 'none';
 }
- 
+
 function galLightboxNav(dir) {
   if (!galLightboxItems.length) return;
   galLightboxIdx = (galLightboxIdx + dir + galLightboxItems.length) % galLightboxItems.length;
   showLightboxItem();
 }
- 
+
 function openLightbox(src, caption) {
-  // Legacy single-image open (used elsewhere — keep compatible)
   galLightboxItems = [{ image_url: src, title: caption }];
   galLightboxIdx   = 0;
   showLightboxItem();
   document.getElementById('lightbox')?.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
- 
+
 function closeLightbox() {
   document.getElementById('lightbox')?.classList.remove('active');
   document.body.style.overflow = '';
 }
- 
-// ── HELPERS ──
+
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -908,7 +1038,7 @@ function shuffle(arr) {
   }
   return arr;
 }
- 
+
 function esc2(str) {
   return String(str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }

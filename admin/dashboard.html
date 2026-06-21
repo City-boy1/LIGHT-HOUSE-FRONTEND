@@ -66,7 +66,7 @@
             <button class="menu-toggle" id="menuToggle">☰</button>
             <h1 class="topbar-title" id="panelTitle">Announcements</h1>
             <div class="topbar-actions">
-                <span class="topbar-church">Lighthouse Church — The Quodesh Family Church</span>
+                <span class="topbar-church">Lighthouse Church — Beloved Son Cathedral</span>
             </div>
         </div>
 
@@ -168,6 +168,15 @@
                     </div>
                     <div id="homeSermonStats"></div>
                 </div>
+
+                <!-- MONTHLY MEMBER STATS -->
+                <div class="home-card">
+                    <div class="home-card-header">
+                        <div class="home-card-title">📈 Members This Month</div>
+                        <button class="btn-edit btn-sm" onclick="loadPanel('members')">View All</button>
+                    </div>
+                    <div id="homeMonthlyStats" style="padding:16px 20px"></div>
+                </div>
             </div>
         </div>
 
@@ -236,27 +245,75 @@
             <div class="panel-header">
                 <div class="panel-header-left">
                     <h2>Sermons</h2>
-                    <p>Upload and manage sermon archive</p>
+                    <p>Manage sermon archive by series</p>
                 </div>
-                <button class="btn-add" onclick="openModal('sermon')">+ Add Sermon</button>
+                <div class="panel-header-actions">
+                    <div class="events-tab-group">
+                        <button class="events-tab active" id="tabSeriesList" onclick="switchSermonView('series')">📚
+                            Series</button>
+                        <button class="events-tab" id="tabAllSermons" onclick="switchSermonView('all')">📋 All
+                            Sermons</button>
+                    </div>
+                    <button class="btn-add" onclick="openModal('sermon')">+ Add Sermon</button>
+                </div>
             </div>
-            <div class="data-table-wrapper">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Pastor</th>
-                            <th>Date</th>
-                            <th>Series</th>
-                            <th>Views</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sermonsTable"></tbody>
-                </table>
+
+            <!-- SERIES VIEW -->
+            <div id="sermonSeriesView">
+                <div id="sermonSeriesGrid" class="sermon-series-grid"></div>
+            </div>
+
+            <!-- ALL SERMONS TABLE VIEW -->
+            <div id="sermonTableView" style="display:none">
+                <div class="members-filters" style="margin-bottom:16px">
+                    <input type="text" id="sermonSearch" placeholder="🔍 Search sermons..." oninput="filterSermons()" />
+                    <select id="sermonSeriesFilter" onchange="filterSermons()">
+                        <option value="">All Series</option>
+                    </select>
+                    <select id="sermonPastorFilter" onchange="filterSermons()">
+                        <option value="">All Pastors</option>
+                    </select>
+                </div>
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Pastor</th>
+                                <th>Date</th>
+                                <th>Series</th>
+                                <th>Media</th>
+                                <th>Views</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sermonsTable"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
+        <!-- SERIES DETAIL OVERLAY -->
+        <div class="modal-overlay" id="seriesDetailOverlay" onclick="if(event.target===this)closeSeriesDetail()">
+            <div class="modal" style="max-width:900px">
+                <div class="modal-header">
+                    <h3 id="seriesDetailTitle">Series</h3>
+                    <button class="modal-close" onclick="closeSeriesDetail()">×</button>
+                </div>
+                <div class="modal-body" id="seriesDetailBody"></div>
+            </div>
+        </div>
+
+        <!-- SERMON MEDIA MANAGER OVERLAY -->
+        <div class="modal-overlay" id="sermonMediaOverlay" onclick="if(event.target===this)closeSermonMedia()">
+            <div class="modal" style="max-width:680px">
+                <div class="modal-header">
+                    <h3 id="sermonMediaTitle">Manage Media</h3>
+                    <button class="modal-close" onclick="closeSermonMedia()">×</button>
+                </div>
+                <div class="modal-body" id="sermonMediaBody"></div>
+            </div>
+        </div>
         <!-- GALLERY -->
         <div class="panel" id="panel-gallery">
             <div class="panel-header">
@@ -398,6 +455,18 @@
                 </select>
             </div>
             <div class="members-stats" id="membersStats"></div>
+
+            <!-- ACTIVITY PANEL -->
+            <div class="activity-panel">
+                <div class="activity-panel-header" onclick="toggleActivityPanel()">
+                    <span class="activity-panel-title">🔔 Recent Member Activity</span>
+                    <button class="btn-edit btn-sm" id="activityToggleBtn">▼ Show</button>
+                </div>
+                <div class="activity-panel-body" id="activityPanelBody">
+                    <div id="memberActivityFeed"></div>
+                </div>
+            </div>
+
             <div class="data-table-wrapper" style="margin-top:16px">
                 <table class="data-table">
                     <thead>
@@ -499,12 +568,12 @@
                             <th>Email</th>
                             <th>Role</th>
                             <th>Created</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="adminsTable">
                         <tr>
-                            <td colspan="4" style="text-align:center;color:#999;padding:40px">Superadmin access
-                                required.</td>
+                            <td colspan="5" class="table-loading">Superadmin access required.</td>
                         </tr>
                     </tbody>
                 </table>
