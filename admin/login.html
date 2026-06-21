@@ -34,6 +34,8 @@
             align-items: center;
             justify-content: center;
             background: linear-gradient(160deg, var(--navy-dark) 0%, var(--navy) 60%, #1a4a8a 100%);
+            padding: 16px;
+            overflow-x: hidden;
         }
 
         .login-card {
@@ -155,6 +157,21 @@
         .back-link:hover {
             color: var(--gold);
         }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 16px;
+            }
+
+            .login-card {
+                padding: 36px 24px;
+                border-radius: 16px;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+        }
     </style>
 </head>
 
@@ -187,7 +204,7 @@
 
         const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
             ? 'http://localhost:5000/api'
-            : '/api';
+            : 'https://light-house-backend.onrender.com/api';
 
         document.addEventListener('keypress', (e) => { if (e.key === 'Enter') doLogin(); });
 

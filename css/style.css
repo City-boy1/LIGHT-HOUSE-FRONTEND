@@ -248,9 +248,9 @@ body > footer {
   position: absolute; inset: 0;
   background: linear-gradient(
     160deg,
-    rgba(8,26,53,0.50) 0%,
-    rgba(13,43,82,0.32) 50%,
-    rgba(8,26,53,0.50) 100%
+    rgba(8,26,53,0.59) 0%,
+    rgba(13,43,82,0.42) 50%,
+    rgba(8,26,53,0.59) 100%
   );
 }
 .hero-eyebrow {

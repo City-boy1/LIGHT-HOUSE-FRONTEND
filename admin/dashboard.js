@@ -4,7 +4,7 @@
 
 const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:5000/api'
-  : 'https://light-house-backend.onrender.com';
+  : 'https://light-house-backend.onrender.com/api';
 
 let TOKEN = localStorage.getItem('church_token');
 let ADMIN = JSON.parse(localStorage.getItem('church_admin') || '{}');
