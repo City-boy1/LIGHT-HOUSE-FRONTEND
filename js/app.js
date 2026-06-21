@@ -822,6 +822,9 @@ function closeSermonSeriesModal(e) {
 function openSermonPlayer(id) {
   const s = sermonDataMap[id];
   if (!s) return;
+
+  fetch(`${API}/sermons/${id}/view`, { method: 'POST' }).catch(() => {});
+
   const videoEmbed = s.video_url ? buildVideoEmbed(s.video_url) : null;
 
   let mediaHTML;
