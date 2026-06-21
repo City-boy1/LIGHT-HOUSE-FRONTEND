@@ -8,7 +8,7 @@ const CONFIG = {
   // e.g. 'https://your-backend.onrender.com/api' or 'https://api.lighthousechurch.org/api'
   API_BASE_URL: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:5000/api'
-  : 'https://your-actual-backend.onrender.com/api',
+  : 'https://light-house-backend.onrender.com',
 
   BIBLE_API_URL: 'https://bible-api.com', // free, no key required
 
