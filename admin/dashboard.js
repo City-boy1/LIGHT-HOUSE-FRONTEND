@@ -568,10 +568,7 @@ async function loadEvents(archived = false) {
     <td>${e.location || '—'}</td>
     <td>${e.is_published ? badge('Published', 'success') : badge('Draft', 'warning')}</td>
     <td><button class="btn-form btn-sm" onclick="openFormBuilder('${e.id}','${esc(e.title)}')">📋 Form</button></td>
-    <td>
-      ${actionBtns(e.id, 'event')}
-      ${e.image_url ? `<button class="btn-danger btn-sm" style="margin-top:6px" onclick="deleteEventImage('${e.id}','${esc(e.cloudinary_public_id)}')">🖼️ Remove Image</button>` : ''}
-    </td>
+    <td>${actionBtns(e.id, 'event')}</td>
   </tr>`).join('');
 }
 
@@ -2556,7 +2553,8 @@ async function saveItem() {
         isSaving = false;
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = originalBtnText; }
         return;
-      }ded.url;
+      }
+      body.image_url = uploaded.url;
       body.cloudinary_public_id = uploaded.public_id;
     }
   }
@@ -2574,7 +2572,10 @@ if (type === 'ministry') {
       const file = mediaFile.files[0];
       // Size guard
       if (file.size > 50 * 1024 * 1024) {
-        showToast('❌ File too large. Max 50MB for videos, 10MB for images.', 'error'); return;
+        showToast('❌ File too large. Max 50MB for videos, 10MB for images.', 'error');
+        isSaving = false;
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = originalBtnText; }
+        return;
       }
       const isVideo = file.type.startsWith('video/');
       showToast(`⬆️ Uploading ${isVideo ? 'video' : 'image'}...`, 'info');
@@ -2594,7 +2595,10 @@ if (type === 'ministry') {
         body.media_public_id = uploadData.public_id;
         body.media_type = isVideo ? 'video' : 'image';
       } catch (err) {
-        showToast('❌ Media upload failed: ' + err.message, 'error'); return;
+        showToast('❌ Media upload failed: ' + err.message, 'error');
+        isSaving = false;
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = originalBtnText; }
+        return;
       }
     }
   } else {
