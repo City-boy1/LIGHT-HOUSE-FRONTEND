@@ -183,6 +183,18 @@ document.getElementById('menuToggle').addEventListener('click', () => {
   document.getElementById('sidebar').classList.toggle('open');
 });
 
+document.addEventListener('click', (e) => {
+  const sidebar = document.getElementById('sidebar');
+  const menuToggle = document.getElementById('menuToggle');
+  if (
+    sidebar.classList.contains('open') &&
+    !sidebar.contains(e.target) &&
+    !menuToggle.contains(e.target)
+  ) {
+    sidebar.classList.remove('open');
+  }
+});
+
 function loadPanel(panel) {
   // Update nav active state
   document.querySelectorAll('.nav-item[data-panel]').forEach(n => {
@@ -556,7 +568,10 @@ async function loadEvents(archived = false) {
     <td>${e.location || '—'}</td>
     <td>${e.is_published ? badge('Published', 'success') : badge('Draft', 'warning')}</td>
     <td><button class="btn-form btn-sm" onclick="openFormBuilder('${e.id}','${esc(e.title)}')">📋 Form</button></td>
-    <td>${actionBtns(e.id, 'event')}</td>
+    <td>
+      ${actionBtns(e.id, 'event')}
+      ${e.image_url ? `<button class="btn-danger btn-sm" style="margin-top:6px" onclick="deleteEventImage('${e.id}','${esc(e.cloudinary_public_id)}')">🖼️ Remove Image</button>` : ''}
+    </td>
   </tr>`).join('');
 }
 
@@ -1980,6 +1995,25 @@ async function deleteEventImage(eventId, publicId) {
   });
 }
 
+async function deletePastorImage(pastorId, publicId) {
+  showConfirm({
+    icon: '🖼️', title: 'Delete Photo',
+    message: 'This will permanently remove the photo from Cloudinary. The pastor profile will remain.',
+    confirmText: 'Delete Photo', confirmClass: 'confirm-btn-danger',
+    onConfirm: async () => {
+      const res = await api('PATCH', `/pastors/${pastorId}/clear-image`, { cloudinary_public_id: publicId || null });
+      if (res && !res.error) {
+        showToast('🗑 Photo removed', 'info');
+        closeModalNow();
+        loadPastors();
+        loadPastorsList();
+      } else {
+        showToast(res?.error || '❌ Failed to remove photo', 'error');
+      }
+    }
+  });
+}
+
 async function changePassword() {
   const cur = document.getElementById('currentPw').value;
   const nw = document.getElementById('newPw').value;
@@ -2215,9 +2249,17 @@ function openModal(type, data = null) {
         </div>
         <div class="form-row">
           <div class="form-group"><label>Photo</label>
-            ${data?.image_url ? `<img src="${data.image_url}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #b89240;margin-bottom:6px" />` : ''}
-            <input type="file" id="f_image_file" accept="image/*" />
+            ${data?.image_url
+              ? `<div class="media-current-wrap">
+                  <img src="${data.image_url}" class="media-current-thumb" style="border-radius:50%" />
+                  <div class="media-current-actions">
+                    <label class="btn-edit btn-sm media-replace-label">🔄 Replace<input type="file" accept="image/*" id="f_image_file" class="media-file-hidden" /></label>
+                    <button type="button" class="btn-danger btn-sm" onclick="deletePastorImage('${data.id}','${esc(data.cloudinary_public_id)}')">🗑 Delete Image</button>
+                  </div>
+                </div>`
+              : `<input type="file" id="f_image_file" accept="image/*" />`}
             <input type="hidden" id="f_image_url" value="${esc(data?.image_url)}" />
+            <input type="hidden" id="f_cloudinary_public_id" value="${esc(data?.cloudinary_public_id)}" />
           </div>
           <div class="form-group"><label>Display Order</label><input type="number" id="f_display_order" value="${data?.display_order || 0}" /></div>
         </div>
@@ -2473,7 +2515,7 @@ async function saveItem() {
     }),
     pastor: () => ({
       endpoint: `/pastors${id ? '/' + id : ''}`,
-      body: { name: gv('f_name'), title: gv('f_title'), bio: gv('f_bio'), email: gv('f_email'), phone: gv('f_phone'), image_url: gv('f_image_url') || null, display_order: parseInt(gv('f_display_order') || 0), is_active: gc('f_is_active') }
+      body: { name: gv('f_name'), title: gv('f_title'), bio: gv('f_bio'), email: gv('f_email'), phone: gv('f_phone'), image_url: gv('f_image_url') || null, cloudinary_public_id: gv('f_cloudinary_public_id') || null, display_order: parseInt(gv('f_display_order') || 0), is_active: gc('f_is_active') }
     }),
     ministry: () => ({
   endpoint: `/ministries${id ? '/' + id : ''}`,
@@ -2510,8 +2552,11 @@ async function saveItem() {
       showToast('⬆️ Uploading image...', 'info');
       const folderMap = { announcement: 'lighthouse/announcements', event: 'lighthouse/events', pastor: 'lighthouse/pastors', ministry: 'lighthouse/ministries', gallery: 'lighthouse/gallery' };
       const uploaded = await uploadImage(fileInput, folderMap[type] || 'lighthouse/images');
-      if (!uploaded) return;
-      body.image_url = uploaded.url;
+      if (!uploaded) {
+        isSaving = false;
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = originalBtnText; }
+        return;
+      }ded.url;
       body.cloudinary_public_id = uploaded.public_id;
     }
   }
